@@ -1,0 +1,11 @@
+pillow
+pymupdf
+pdf2docx
+python-docx
+pywin32
+trimesh
+networkx
+cascadio
+ezdxf
+# build only
+pyinstaller
