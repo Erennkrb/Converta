@@ -127,11 +127,19 @@ def install_message(names):
         return tr("Context menu installed.", "Kontextmenü installiert.")
     where = ", ".join(names) if names else tr("no supported file manager found",
                                               "kein unterstützter Dateimanager gefunden")
-    return tr(f"Converta is set up: {where}.\n\nRight-click a file to use it. In other file "
+    text = tr(f"Converta is set up: {where}.\n\nRight-click a file to use it. In other file "
               "managers use \"Open with\". You may need to restart your file manager.",
               f"Converta ist eingerichtet: {where}.\n\nRechtsklicke eine Datei, um es zu nutzen. "
               "In anderen Dateimanagern geht es über \"Öffnen mit\". Eventuell musst du den "
               "Dateimanager neu starten.")
+    if shell.needs_nautilus_python():
+        text += tr("\n\nFor the Converta submenu in GNOME Files, install the \"nautilus-python\" "
+                   "package (Debian/Ubuntu: \"python3-nautilus\"), run this setup again and "
+                   "restart Files. Until then it is under Scripts.",
+                   "\n\nFür das Converta-Untermenü in GNOME Dateien installiere das Paket "
+                   "\"nautilus-python\" (Debian/Ubuntu: \"python3-nautilus\"), führe diese "
+                   "Einrichtung erneut aus und starte Dateien neu. Bis dahin steht es unter Skripte.")
+    return text
 
 
 def report(errors):

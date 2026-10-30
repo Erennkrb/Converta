@@ -219,13 +219,23 @@ def _write_thunar():
     _save_thunar(root)
 
 
+def has_nautilus_python():
+    """The plugin that lets Nautilus load our real submenu."""
+    return bool(glob.glob("/usr/lib*/nautilus/extensions-*/libnautilus-python.so")
+                + glob.glob("/usr/lib/*/nautilus/extensions-*/libnautilus-python.so"))
+
+
+def needs_nautilus_python():
+    return shutil.which("nautilus") is not None and not has_nautilus_python()
+
+
 def _write_scripts():
     """Nautilus and Caja scripts menu: opens the picker for the selected files."""
     script = "\n".join([
         "#!/bin/sh",
         'paths="${NAUTILUS_SCRIPT_SELECTED_FILE_PATHS:-$CAJA_SCRIPT_SELECTED_FILE_PATHS}"',
         "set -f", "IFS='", "'", f"exec {_shell_command('$paths')}", ""])
-    if _present("nautilus", os.path.join(_data_home(), "nautilus")):
+    if _present("nautilus", os.path.join(_data_home(), "nautilus")) and not has_nautilus_python():
         _write(os.path.join(_data_home(), "nautilus", "scripts", APP_NAME), script, True)
     if _present("caja", os.path.join(_config_home(), "caja")):
         _write(os.path.join(_config_home(), "caja", "scripts", APP_NAME), script, True)
