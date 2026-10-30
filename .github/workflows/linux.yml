@@ -71,6 +71,26 @@ jobs:
             }
             sh /w/packaging/linux/smoke_test.sh /w/dist/linux/converta-*-linux-x86_64.tar.gz /w/dist/fixtures'
 
+  # running from source on Fedora, with the distro's own Python and Tk
+  fedora-source:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-x86_64
+          path: dist
+      - name: Frame picker from source on Fedora
+        run: |
+          docker run --rm -v "$PWD:/w:ro" fedora:latest sh -c '
+            set -e
+            dnf install -y -q python3 python3-pip python3-tkinter xorg-x11-server-Xvfb xorg-x11-xauth xdotool which procps-ng coreutils >/dev/null
+            cp -r /w /tmp/src && cd /tmp/src
+            python3 -m venv .venv
+            .venv/bin/pip install -q -r requirements.txt
+            xvfb-run -a sh packaging/linux/picker_test.sh .venv/bin/python dist/fixtures/anim.gif .venv/bin/python main.py'
+
   desktop:
     needs: build
     runs-on: ubuntu-24.04
@@ -81,7 +101,7 @@ jobs:
           name: linux-x86_64
           path: dist
       - name: Install test tools
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb ffmpeg libreoffice-writer python3-gi python3-nautilus gir1.2-nautilus-4.0
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb xdotool python3-pil ffmpeg libreoffice-writer python3-gi python3-nautilus gir1.2-nautilus-4.0
       - name: Test windows, FFmpeg, LibreOffice, packages, Nautilus
         run: |
           sh packaging/linux/desktop_test.sh \

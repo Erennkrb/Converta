@@ -23,7 +23,7 @@ python -m pip install --quiet --disable-pip-version-check -r requirements.txt
 python -m PyInstaller --noconfirm --clean --onedir --name converta \
   --add-data "$PWD/assets:assets" \
   --collect-data pdf2docx --collect-data trimesh --collect-data ezdxf \
-  --collect-binaries cascadio --hidden-import networkx --hidden-import PIL._tkinter_finder \
+  --collect-binaries cascadio --hidden-import networkx \
   --exclude-module pymupdf.layout --exclude-module onnxruntime \
   --exclude-module matplotlib --exclude-module scipy --exclude-module pandas \
   --distpath build/linux/app --workpath build/linux/work --specpath build/linux \

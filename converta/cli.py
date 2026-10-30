@@ -3,6 +3,7 @@ import argparse
 import os
 import socket
 import sys
+import traceback
 
 from . import APP_NAME, documents, images, media, models, shell, ui
 from .formats import LABELS, SINGLE_FRAME_IMAGES, VIDEO_KEYS, group_of
@@ -106,6 +107,7 @@ def convert_files(files, target):
             try:
                 frame = ui.pick_frame(path, LABELS[target])
             except Exception as e:
+                traceback.print_exc()
                 ui.message(f"{os.path.basename(path)}:\n\n{e}", error=True)
                 continue
             if frame is not None:

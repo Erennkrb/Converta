@@ -28,6 +28,9 @@ convert sample.docx pdf "sample (1).pdf"
 convert sample.docx odt sample.odt
 convert part.step 3mf part.3mf
 
+# the frame picker opens and saves the chosen frame
+xvfb-run -a sh "$(dirname "$0")/picker_test.sh" /usr/bin/python3 "$WORK/files/anim.gif" "$BIN"
+
 # the AppImage runs by itself
 chmod +x "$APPIMAGE"
 "$APPIMAGE" --appimage-extract-and-run --to jpg "$WORK/files/sample.png"

@@ -1,4 +1,6 @@
 """Small Tk windows: progress for slow conversions, frame and format pickers."""
+import base64
+import io
 import os
 import sys
 import threading
@@ -242,14 +244,21 @@ def _preview(img):
     return img
 
 
+def _photo(root, img):
+    """Tk image via PNG data: unlike ImageTk this works with every Python's Tk build."""
+    import tkinter as tk
+
+    buffer = io.BytesIO()
+    img.convert("RGB").save(buffer, "PNG", compress_level=1)
+    return tk.PhotoImage(master=root, data=base64.b64encode(buffer.getvalue()))
+
+
 def pick_frame(path, target_label):
     """Let the user choose one picture from an animation or video. Returns it, or None."""
     import tkinter as tk
     from tkinter import ttk
 
-    from PIL import ImageTk
-
-    source = VideoFrames(path) if not _is_image(path) else AnimationFrames(path)
+    source =VideoFrames(path) if not _is_image(path) else AnimationFrames(path)
 
     root = _new_root(f"{APP_NAME} – " + tr("Pick a frame", "Bild auswählen"))
     frame = ttk.Frame(root, padding=16)
@@ -259,7 +268,10 @@ def pick_frame(path, target_label):
                              f"Wähle das Bild, das als {target_label} gespeichert wird."),
               foreground="gray").pack(anchor="w", pady=(2, 10))
 
-    canvas = tk.Label(frame, background="#202020", width=PREVIEW_MAX[0], height=PREVIEW_MAX[1])
+    # a blank image first, so width and height count pixels instead of characters
+    state_blank = tk.PhotoImage(master=root, width=1, height=1)
+    canvas = tk.Label(frame, image=state_blank, background="#202020",
+                      width=PREVIEW_MAX[0], height=PREVIEW_MAX[1])
     canvas.pack()
 
     controls = ttk.Frame(frame)
@@ -278,8 +290,8 @@ def pick_frame(path, target_label):
         except Exception as e:
             caption.configure(text=tr(f"Error: {e}", f"Fehler: {e}"))
             return
-        state["photo"] = ImageTk.PhotoImage(_preview(img))
-        canvas.configure(image=state["photo"], width=PREVIEW_MAX[0], height=PREVIEW_MAX[1])
+        state["photo"] = _photo(root, _preview(img))
+        canvas.configure(image=state["photo"])
         caption.configure(text=source.describe(i))
         state["shown"] = i
 
