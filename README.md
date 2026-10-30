@@ -1,69 +1,107 @@
-<p align="center">
-  <img src="assets/converta.png" width="128" alt="Converta logo">
-</p>
+![Converta](assets/banner.gif)
 
-<h1 align="center">Converta</h1>
+**[converta.erenk.de](https://converta.erenk.de)** · [Download](https://github.com/Erennkrb/Converta/releases) · [Setup](#setup) · [Help](#help)
 
-<p align="center">
-  Convert files straight from your Windows right-click menu, without any uploads.<br>
-  Images, audio, video, PDFs, Office docs, 3D models, and CAD — everything stays entirely on your PC.
-</p>
+You save a photo from the internet and it turns out to be a WEBP file. Your editing software won't open it, the upload form you need it for won't accept it, and suddenly you're looking for an online converter that wants your email address before it gives your own picture back.
 
-<p align="center">
-  <a href="https://converta.erenk.de"><b>Website</b></a> ·
-  <a href="https://github.com/Erennkrb/Converta/releases/latest"><b>Download</b></a>
-</p>
+Or you just right click the file, choose Converta, then Convert to PNG. The PNG appears right next to the original and you get on with your day.
 
----
+That's Converta. It adds file conversion to the right click menu on Windows and Linux. It's free, it's open source, and your files never leave your computer.
 
-## How it works
+![Converta converting a PNG to WEBP from the right click menu](assets/demo.gif)
 
-Just right-click any file, hover over **Converta**, and pick your format. The newly converted file pops up right next to your original one. Don't worry—nothing ever gets overwritten.
+*An animation of how it works. The menu on your system will match your system's own style.*
 
-*(On Windows 11, you'll find the option under **Show more options**, or by hitting `Shift + right-click`.)*
+## What it converts
 
-## Supported formats
+**Images:** PNG, JPG, WEBP, AVIF, BMP, GIF, TIFF and ICO into each other, and into PDF. GIFs can also become MP4 or WEBM.
 
-| Source | Converts to |
-|---|---|
-| **Images** `png`, `jpg`/`jpeg`/`jfif`, `webp`, `avif`, `bmp`, `gif`, `tif`/`tiff`, `ico` | PNG, JPG, WEBP, AVIF, BMP, GIF, TIFF, ICO, PDF <br>*(GIFs can also become MP4 or WEBM)* |
-| **Audio** `mp3`, `wav`, `flac`, `ogg`, `m4a`, `aac`, `opus`, `wma`, `aif`/`aiff` | MP3, WAV, FLAC, OGG, M4A, OPUS, AAC, WMA |
-| **Video** `mp4`, `mkv`, `webm`, `mov`, `avi`, `wmv`, `flv`, `m4v`, `mpg`/`mpeg`, `3gp` | MP4, MKV, WEBM, MOV, AVI, GIF <br>· Extract audio tracks (MP3, WAV, FLAC, M4A, OGG) <br>· Grab a single frame (PNG, JPG) |
-| **PDF** | Word (`DOCX`), `TXT`, or pages as PNG/JPG |
-| **Word** `docx`, `doc`, `odt`, `rtf` | PDF, DOCX, ODT, RTF, TXT |
-| **Excel** `xlsx`, `xls`, `ods` | PDF, XLSX, ODS, CSV |
-| **PowerPoint** `pptx`, `ppt`, `odp` | PDF, PPTX, ODP |
-| **3D models** `stl`, `obj`, `3mf`, `ply`, `off`, `glb`, `gltf` | STL, OBJ, 3MF, PLY, GLB, OFF |
-| **CAD** `step`/`stp`, `iges`/`igs` | STL, 3MF, OBJ, PLY, GLB <br>*(automatically meshed in millimetres, ready for slicers)* |
-| **DXF drawings** | PDF, SVG, PNG |
+**Audio:** MP3, WAV, FLAC, OGG, M4A, AAC, OPUS, WMA and AIFF. All of them can become MP3, WAV, FLAC, OGG, M4A, OPUS, AAC or WMA.
 
-- **Transparency:** Preserved wherever the target format supports it (formats like JPG, BMP, and PDF will automatically get a clean white background instead).
-- **Animations & Frames:** Animated files (GIF, WEBP, AVIF) stay animated when converted to another animation format. For single-picture formats or videos, a quick window pops up letting you pick the exact frame you want.
-- **Batch processing:** Highlight and select multiple files to convert them all in one go.
+**Video:** MP4, MKV, WEBM, MOV, AVI, WMV, FLV, M4V, MPG and 3GP into MP4, MKV, WEBM, MOV, AVI or GIF. You can also pull out just the audio, or save a single frame as a picture.
 
-## What you'll need
+**PDF:** to Word or plain text, or every page as a PNG or JPG.
 
-- Windows 10 or 11 (64-bit), or Linux (see below)
-- **Audio & video conversions:** [FFmpeg](https://ffmpeg.org). Don't sweat installing it manually—Converta will grab a clean, verified build automatically the first time you need it.
-- **Office documents:** Either Microsoft Office or the free [LibreOffice](https://www.libreoffice.org/download/) installed on your system.
+**Office files:** Word into PDF, DOCX, ODT, RTF or TXT. Excel into PDF, XLSX, ODS or CSV. PowerPoint into PDF, PPTX or ODP.
 
-## Linux
+**3D printing:** STL, OBJ, 3MF, PLY, OFF, GLB and GLTF into STL, OBJ, 3MF, PLY, GLB or OFF. Yes, a file converter that handles your STL files. You're welcome.
 
-Grab the AppImage, `.deb`, `.rpm` or `.tar.gz` from the [latest release](https://github.com/Erennkrb/Converta/releases/latest). The AppImage sets itself up when you double-click it.
+**CAD:** STEP and IGES into STL, 3MF, OBJ, PLY or GLB, in millimetres, so your slicer doesn't hand you a part the size of a grain of rice.
 
-- GNOME Files needs the `nautilus-python` package for the Converta submenu (Debian/Ubuntu: `python3-nautilus`).
-- Audio and video need `ffmpeg`; Office files need `libreoffice`.
+**DXF drawings:** into PDF, SVG or PNG.
+
+Your original file is never overwritten. Select several files and they all get converted in one go. And when you turn an animated GIF or a video into a still image, a small window lets you pick the exact frame, because the first frame is never the good one.
+
+## Setup
+
+Downloads are on the [website](https://converta.erenk.de) and the [releases page](https://github.com/Erennkrb/Converta/releases).
+
+### Windows 10 and 11
+
+1. Download `Converta-Setup` and run it.
+2. Windows will warn you about an unknown publisher because the installer isn't code signed yet. Click More info, then Run anyway.
+3. Click through the setup. The right click menu is set up for you.
+4. Right click a file and choose Converta. On Windows 11, hold Shift while you right click, or choose Show more options first.
+
+### Linux
+
+Fully tested on Arch and Fedora. Other distributions will probably work, and if yours does or doesn't, I'd like to hear about it. Alpine and NixOS aren't supported.
+
+**AppImage (easiest):** make the file executable and double click it. This sets up the menu without root. Keep the file where it is afterwards.
+
+**deb or rpm:** install the package, then log out and back in, or run:
+
+```bash
+converta --install
+```
+
+**tar.gz:** unpack it and run:
+
+```bash
+./install.sh
+```
+
+Then restart your file manager, right click a file and choose Converta.
+
+### What else you might need
+
+**Audio and video** use FFmpeg. On Windows it downloads once, the first time you need it. On Linux, install the `ffmpeg` package.
+
+**Word, Excel and PowerPoint** need LibreOffice, or Microsoft Office on Windows. PDF to Word works without either.
+
+**GNOME Files** needs `nautilus-python` for the Converta submenu (on Debian and Ubuntu it's called `python3-nautilus`).
+
+## Help
+
+**I can't find Converta in the menu.** On Windows 11, hold Shift while you right click. On Linux, restart your file manager. On GNOME without `nautilus-python`, Converta is under Scripts. In any other file manager, use Open with. Converta only appears on file types it supports.
+
+**Windows says the installer is from an unknown publisher.** That's because it isn't code signed yet. Click More info, then Run anyway. The full source code is in this repository if you'd like to check it first.
+
+**Audio or video conversion fails on Linux.** Install the `ffmpeg` package. On Fedora, the default `ffmpeg-free` package leaves out some codecs, so converting to MP4 or MOV may need the full FFmpeg.
+
+**How do I uninstall it?** On Windows, go to Settings, Apps, Installed apps, Converta. On Linux, run `converta --uninstall` first, or start the AppImage with `--uninstall`, then remove the package or file.
+
+**Something else is broken, or a format is missing?** [Open an issue](https://github.com/Erennkrb/Converta/issues). Please say what you tried, which file type it was and which system you're on.
 
 ## Building from source
 
-If you want to tinker or build it yourself:
+On Windows:
 
 ```powershell
 winget install Python.Python.3.13 JRSoftware.InnoSetup
 python -m pip install -r requirements.txt
-
-# run from source (this registers the context menu and will ask for admin rights)
 python main.py --install
-
-# build the installer -> dist\Converta-Setup-<version>.exe
 powershell -ExecutionPolicy Bypass -File .\build.ps1
+```
+
+On Linux:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python main.py --install
+```
+
+## License
+
+[AGPL 3.0](LICENSE), because Converta uses PyMuPDF, which requires it.
