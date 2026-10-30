@@ -116,34 +116,64 @@ h1 .accent { color: var(--accent); }
 }
 @media (pointer: coarse) and (max-width: 860px) { .phone-note { display: block; } }
 
-/* explorer menu illustration */
-.demo { display: flex; flex-direction: column; align-items: flex-start; }
-.file { width: 112px; text-align: center; font-size: 13px; color: var(--muted); }
-.thumb {
-  width: 96px; height: 96px; margin: 0 auto 6px; border-radius: 6px; padding: 6px;
-  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+/* animated Explorer window: the real flow, played by script */
+.demo {
+  position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface); box-shadow: var(--shadow); user-select: none;
+  font: 13px/1.2 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; color: var(--text);
 }
-.photo { display: block; width: 100%; height: 100%; border-radius: 3px; }
-.menus { display: flex; align-items: flex-start; margin: 4px 0 0 64px; }
+.win-bar {
+  display: flex; align-items: center; gap: 8px; height: 36px; padding-left: 12px;
+  background: var(--surface-2); font-size: 12px;
+}
+.win-bar .folder { width: 16px; height: 16px; flex: none; }
+.win-ctrls { margin-left: auto; display: flex; }
+.win-ctrls svg { width: 44px; height: 36px; padding: 13px 16px; color: var(--muted); }
+.win-path {
+  display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px;
+  border-bottom: 1px solid var(--border); color: var(--muted); font-size: 12px;
+}
+.win-path b { color: var(--text); font-weight: 400; }
+.win-files { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; padding: 14px; height: 248px; }
+.tile {
+  width: 104px; padding: 6px 4px 8px; border-radius: 4px; text-align: center;
+  border: 1px solid transparent; font-size: 12px; overflow-wrap: anywhere;
+}
+.tile svg { display: block; width: 84px; height: 62px; margin: 0 auto 6px; border-radius: 2px; }
+.tile.selected {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.tile.fresh { animation: fresh .45s cubic-bezier(.25, 1, .5, 1); }
+@keyframes fresh { from { opacity: .2; transform: scale(.94); } }
 .menu {
-  background: var(--menu-bg); color: var(--menu-text); border-radius: 8px; padding: 5px;
-  font: 13.5px/1.2 "Segoe UI", system-ui, sans-serif;
-  box-shadow: var(--shadow); border: 1px solid var(--menu-line);
+  position: absolute; z-index: 3; background: var(--menu-bg); color: var(--menu-text);
+  border-radius: 8px; padding: 4px; box-shadow: var(--shadow); border: 1px solid var(--menu-line);
 }
-.menu div { padding: 8px 12px; border-radius: 4px; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+.menu > div { padding: 7px 10px; border-radius: 4px; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
 .menu hr { border: 0; border-top: 1px solid var(--menu-line); margin: 4px 6px; }
 .menu .on { background: var(--menu-hover); }
 .menu .ico { width: 16px; height: 16px; flex: none; }
-.menu .arrow { margin-left: auto; padding-left: 24px; opacity: .8; }
-.menu.main { width: 220px; position: relative; z-index: 1; }
-/* the submenu opens beside the highlighted "Converta" row */
-.menu.sub { width: 176px; margin: 72px 0 0 -4px; position: relative; z-index: 2; animation: open .3s .3s cubic-bezier(.25, 1, .5, 1) both; }
-@keyframes open { from { transform: translateX(-4px); } }
+.menu .arrow { margin-left: auto; padding-left: 20px; opacity: .8; }
+.menu.main { width: 196px; }
+.menu.sub { width: 164px; }
+.key {
+  position: absolute; z-index: 6; opacity: 0; transition: opacity .15s;
+  box-shadow: 0 2px 0 var(--border);
+}
+.key.show { opacity: 1; }
+.ring {
+  position: absolute; z-index: 4; width: 26px; height: 26px; margin: -13px 0 0 -13px;
+  border-radius: 50%; border: 2px solid var(--accent); opacity: 0; pointer-events: none;
+}
+.ring.go { animation: ring .45s ease-out; }
+@keyframes ring { from { opacity: .9; transform: scale(.3); } to { opacity: 0; transform: scale(1.15); } }
+.cursor { position: absolute; left: 0; top: 0; z-index: 5; width: 18px; height: 26px; pointer-events: none; }
+.demo-caption { margin: 12px 2px 0; min-height: 1.6em; font-size: 14px; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) {
-  .menu.sub { animation: none; }
   html { scroll-behavior: auto; }
-  .btn { transition: none; }
+  .btn, .key { transition: none; }
+  .tile.fresh, .ring.go { animation: none; }
 }
 
 /* sections */
@@ -213,12 +243,14 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   section { padding: 64px 0; }
 }
 @media (max-width: 480px) {
-  .menus { margin-left: 0; }
-  .menu { font-size: 12px; }
-  .menu div { padding: 7px 9px; }
+  .demo { font-size: 12px; }
+  .win-files { padding: 10px; height: 232px; }
+  .tile { width: calc((100% - 12px) / 4); padding: 5px 2px 7px; font-size: 10.5px; }
+  .tile svg { width: 64px; height: 48px; }
+  .menu > div { padding: 6px 8px; }
   .menu .arrow { padding-left: 10px; }
-  .menu.main { width: 172px; }
-  .menu.sub { width: 156px; margin-top: 64px; }
+  .menu.main { width: 164px; }
+  .menu.sub { width: 146px; }
 }
 </style>
 </head>
@@ -276,28 +308,47 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       </p>
     </div>
 
-    <div class="demo" aria-hidden="true">
-      <div class="file"><div class="thumb"><svg class="photo" viewBox="0 0 80 80" preserveAspectRatio="none"><rect width="80" height="80" fill="#9fd4f5"/><circle cx="56" cy="22" r="8" fill="#ffd96a"/><path d="M0 58 Q18 42 38 56 T80 52 V80 H0z" fill="#3f8f5a"/><path d="M0 70 Q26 58 52 68 T80 64 V80 H0z" fill="#2f7449"/></svg></div><span lang="en">holiday.png</span><span lang="de">urlaub.png</span></div>
-      <div class="menus">
-        <div class="menu main">
-          <div lang="en">Open</div><div lang="de">Öffnen</div>
-          <div lang="en">Edit with Photos</div><div lang="de">Mit Fotos bearbeiten</div>
-          <hr>
-          <div class="on"><img class="ico" src="/logo.png" alt="">Converta<span class="arrow">›</span></div>
-          <hr>
-          <div lang="en">Copy</div><div lang="de">Kopieren</div>
-          <div lang="en">Rename</div><div lang="de">Umbenennen</div>
-          <div lang="en">Properties</div><div lang="de">Eigenschaften</div>
+    <div>
+      <div class="demo" aria-hidden="true">
+        <div class="win-bar">
+          <svg class="folder" viewBox="0 0 16 16"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h3.6l1.5 1.5h5.9A1.5 1.5 0 0 1 15 5v7.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5z" fill="#e8b84a"/></svg>
+          <span lang="en">Holiday</span><span lang="de">Urlaub</span>
+          <span class="win-ctrls">
+            <svg viewBox="0 0 12 10" fill="none" stroke="currentColor"><path d="M1 5h10"/></svg>
+            <svg viewBox="0 0 12 10" fill="none" stroke="currentColor"><rect x="1.5" y=".5" width="9" height="9" rx="1"/></svg>
+            <svg viewBox="0 0 12 10" fill="none" stroke="currentColor"><path d="M1.5 0l9 10M10.5 0l-9 10"/></svg>
+          </span>
         </div>
-        <div class="menu sub">
-          <div lang="en">Convert to JPG</div><div lang="de">In JPG umwandeln</div>
-          <div class="on" lang="en">Convert to WEBP</div><div class="on" lang="de">In WEBP umwandeln</div>
-          <div lang="en">Convert to AVIF</div><div lang="de">In AVIF umwandeln</div>
-          <div lang="en">Convert to ICO</div><div lang="de">In ICO umwandeln</div>
-          <hr>
-          <div lang="en">Convert to PDF</div><div lang="de">In PDF umwandeln</div>
+        <div class="win-path"><span lang="en">Pictures</span><span lang="de">Bilder</span> › <b lang="en">Holiday</b><b lang="de">Urlaub</b></div>
+        <div class="win-files">
+          <div class="tile"><svg viewBox="0 0 84 62"><rect width="84" height="62" fill="#f3aa78"/><circle cx="60" cy="18" r="7" fill="#ffe28c"/><path d="M0 40 Q20 30 42 40 T84 37 V62 H0z" fill="#b0705c"/><path d="M0 50 Q26 43 52 51 T84 47 V62 H0z" fill="#784a42"/></svg><span lang="en">beach.png</span><span lang="de">meer.png</span></div>
+          <div class="tile" data-file="src"><svg viewBox="0 0 84 62"><rect width="84" height="62" fill="#9fd4f5"/><circle cx="60" cy="17" r="7" fill="#ffd96a"/><path d="M0 44 Q19 32 40 42 T84 39 V62 H0z" fill="#3f8f5a"/><path d="M0 53 Q27 44 55 52 T84 48 V62 H0z" fill="#2f7449"/></svg><span lang="en">holiday.png</span><span lang="de">urlaub.png</span></div>
+          <div class="tile" data-file="out" hidden><svg viewBox="0 0 84 62"><rect width="84" height="62" fill="#9fd4f5"/><circle cx="60" cy="17" r="7" fill="#ffd96a"/><path d="M0 44 Q19 32 40 42 T84 39 V62 H0z" fill="#3f8f5a"/><path d="M0 53 Q27 44 55 52 T84 48 V62 H0z" fill="#2f7449"/></svg><span lang="en">holiday.webp</span><span lang="de">urlaub.webp</span></div>
+          <div class="tile"><svg viewBox="0 0 84 62"><rect width="84" height="62" fill="#c4d6e8"/><circle cx="62" cy="16" r="6" fill="#fafaf0"/><path d="M0 46 L22 22 L38 38 L56 18 L84 44 V62 H0z" fill="#70809a"/><path d="M0 54 Q30 46 58 54 T84 51 V62 H0z" fill="#4e5c6e"/></svg><span lang="en">mountains.png</span><span lang="de">zugspitze.png</span></div>
         </div>
+        <div class="menu main" hidden>
+          <div><span lang="en">Open</span><span lang="de">Öffnen</span></div>
+          <div><span lang="en">Edit with Photos</span><span lang="de">Mit Fotos bearbeiten</span></div>
+          <hr>
+          <div class="conv"><img class="ico" src="/logo.png" alt="">Converta<span class="arrow">›</span></div>
+          <hr>
+          <div><span lang="en">Copy</span><span lang="de">Kopieren</span></div>
+          <div><span lang="en">Rename</span><span lang="de">Umbenennen</span></div>
+          <div><span lang="en">Properties</span><span lang="de">Eigenschaften</span></div>
+        </div>
+        <div class="menu sub" hidden>
+          <div><span lang="en">Convert to JPG</span><span lang="de">In JPG umwandeln</span></div>
+          <div class="target"><span lang="en">Convert to WEBP</span><span lang="de">In WEBP umwandeln</span></div>
+          <div><span lang="en">Convert to AVIF</span><span lang="de">In AVIF umwandeln</span></div>
+          <div><span lang="en">Convert to ICO</span><span lang="de">In ICO umwandeln</span></div>
+          <hr>
+          <div><span lang="en">Convert to PDF</span><span lang="de">In PDF umwandeln</span></div>
+        </div>
+        <kbd class="key">Shift</kbd>
+        <span class="ring"></span>
+        <svg class="cursor" viewBox="0 0 18 26"><path d="M1.5 1.5v19l4.6-4.4 3.1 7.2 3.2-1.4-3.1-7.1h6.4z" fill="#fff" stroke="#000" stroke-width="1.3" stroke-linejoin="round"/></svg>
       </div>
+      <p class="demo-caption" aria-hidden="true"></p>
     </div>
   </div>
 
@@ -467,6 +518,143 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   themeBtn.addEventListener("click", function () {
     setTheme(root.dataset.theme === "light" ? "dark" : "light");
   });
+
+  // hero demo: plays the real flow in a drawn Explorer window
+  (function () {
+    var demo = document.querySelector(".demo");
+    if (!demo) return;
+    var $ = function (s) { return demo.querySelector(s); };
+    var cursor = $(".cursor"), main = $(".menu.main"), sub = $(".menu.sub"), conv = $(".conv"),
+        target = $(".target"), key = $(".key"), ring = $(".ring"),
+        src = $('[data-file="src"]'), out = $('[data-file="out"]'),
+        caption = document.querySelector(".demo-caption");
+    var CAPTIONS = {
+      en: ["Shift + right-click a file", "Open Converta", "Pick a format",
+           "Done. The new file sits right next to the original."],
+      de: ["Shift + Rechtsklick auf eine Datei", "Converta öffnen", "Format wählen",
+           "Fertig. Die neue Datei liegt direkt neben dem Original."]
+    };
+    var step = -1, active = false, resume = null;
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    function say(i) {
+      step = i;
+      caption.textContent = i < 0 ? "" : CAPTIONS[root.dataset.lang][i];
+    }
+    document.querySelectorAll(".lang button").forEach(function (b) {
+      b.addEventListener("click", function () { say(step); if (reduced.matches) still(); });
+    });
+
+    function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+    function box(el) {
+      var d = demo.getBoundingClientRect(), r = el.getBoundingClientRect();
+      return { x: r.left - d.left, y: r.top - d.top, w: r.width, h: r.height };
+    }
+    function move(x, y, ms) {
+      cursor.style.transition = ms ? "transform " + ms + "ms cubic-bezier(.3, .7, .2, 1)" : "none";
+      cursor.style.transform = "translate(" + x + "px," + y + "px)";
+      return wait(ms || 0);
+    }
+    function click(x, y) {
+      ring.style.left = x + "px"; ring.style.top = y + "px";
+      ring.classList.remove("go"); void ring.offsetWidth; ring.classList.add("go");
+    }
+    // menus open at the pointer and stay inside the window, like Windows does
+    function openMain(x, y) {
+      main.hidden = false;
+      var left = Math.min(x, demo.clientWidth - main.offsetWidth - 6);
+      var top = Math.min(y, demo.clientHeight - main.offsetHeight - 6);
+      main.style.left = left + "px"; main.style.top = top + "px";
+    }
+    function openSub() {
+      sub.hidden = false;
+      var m = box(main), c = box(conv), W = demo.clientWidth;
+      var left = m.x + m.w - 4;
+      if (left + sub.offsetWidth > W - 4) left = m.x - sub.offsetWidth + 4;
+      var top = Math.min(c.y - 5, demo.clientHeight - sub.offsetHeight - 6);
+      sub.style.left = left + "px"; sub.style.top = top + "px";
+    }
+    function reset() {
+      main.hidden = sub.hidden = out.hidden = true;
+      [src, out, conv, target].forEach(function (el) { el.classList.remove("selected", "fresh", "on"); });
+      key.classList.remove("show");
+      say(-1);
+      return move(demo.clientWidth - 48, demo.clientHeight - 44, 0);
+    }
+    function srcPoint() { var s = box(src); return [s.x + s.w / 2, s.y + s.h * 0.4]; }
+
+    async function play() {
+      await reset();
+      await wait(700);
+      var p = srcPoint();
+      say(0);
+      await move(p[0], p[1], 900);
+      await wait(150);
+      click(p[0], p[1]); src.classList.add("selected");
+      await wait(450);
+      key.style.left = (p[0] + 18) + "px"; key.style.top = (p[1] + 20) + "px";
+      key.classList.add("show");
+      await wait(400);
+      click(p[0], p[1]); openMain(p[0], p[1]);
+      await wait(300);
+      key.classList.remove("show");
+      await wait(450);
+      say(1);
+      var c = box(conv);
+      await move(c.x + c.w * 0.45, c.y + c.h / 2, 650);
+      conv.classList.add("on");
+      await wait(250);
+      openSub();
+      await wait(500);
+      say(2);
+      var t = box(target), s = box(sub), m = box(main);
+      var entryX = s.x > m.x ? s.x + 24 : s.x + s.w - 24;
+      await move(entryX, c.y + c.h / 2, 380);
+      await move(t.x + t.w * 0.45, t.y + t.h / 2, 450);
+      target.classList.add("on");
+      await wait(350);
+      click(t.x + t.w * 0.45, t.y + t.h / 2);
+      await wait(150);
+      main.hidden = sub.hidden = true;
+      conv.classList.remove("on"); target.classList.remove("on"); src.classList.remove("selected");
+      await wait(400);
+      out.hidden = false; out.classList.add("fresh", "selected");
+      say(3);
+      var o = box(out);
+      await move(o.x + o.w * 0.62, o.y + o.h * 0.3, 700);
+      await wait(2800);
+    }
+    // a still frame for people who prefer less motion: the menu open on the chosen format
+    function still() {
+      reset().then(function () {
+        var p = srcPoint();
+        src.classList.add("selected");
+        openMain(p[0], p[1]); conv.classList.add("on");
+        openSub(); target.classList.add("on");
+        var t = box(target);
+        move(t.x + t.w * 0.45, t.y + t.h / 2, 0);
+        say(2);
+      });
+    }
+    async function loop() {
+      for (;;) {
+        if (!active) await new Promise(function (r) { resume = r; });
+        await play();
+      }
+    }
+    function setActive(on) {
+      active = on && !document.hidden && !reduced.matches;
+      if (active && resume) { resume(); resume = null; }
+    }
+
+    if (reduced.matches) { still(); return; }
+    var visible = false;
+    new IntersectionObserver(function (entries) {
+      visible = entries[0].isIntersecting; setActive(visible);
+    }).observe(demo);
+    document.addEventListener("visibilitychange", function () { setActive(visible); });
+    loop();
+  })();
 
   // "Why?" next to the download opens its FAQ answer
   function openTarget() {
