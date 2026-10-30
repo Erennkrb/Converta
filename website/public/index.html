@@ -1,42 +1,53 @@
 <!doctype html>
-<html lang="de" data-lang="de">
+<html lang="en" data-lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Converta – Dateien per Rechtsklick umwandeln</title>
-<meta name="description" content="Converta wandelt Bilder, Audio, Video, PDF und Office-Dateien direkt aus dem Windows-Rechtsklick-Menü um. Kostenlos, Open Source, alles bleibt auf deinem PC.">
+<title>Converta – Convert files with a right-click</title>
+<meta name="description" content="Converta converts images, audio, video, PDFs, Office documents, 3D models and CAD files right from the Windows right-click menu. Free, open source, and nothing leaves your PC.">
 <meta property="og:title" content="Converta">
-<meta property="og:description" content="Dateien per Rechtsklick umwandeln – Bilder, Audio, Video, PDF, Office.">
+<meta property="og:description" content="Convert files with a right-click: images, audio, video, PDF, Office, 3D models and CAD. Free and open source for Windows.">
 <meta property="og:image" content="https://converta.erenk.de/logo.png">
-<meta name="theme-color" content="#5b6cf0">
+<meta name="theme-color" content="#f6f5f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1c1c" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="/favicon.ico">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
+/* Windows-native: Explorer's warm neutrals and the default Windows 11 accent blue */
 :root {
-  --bg: #f7f8fc;
+  --bg: #f6f5f3;
   --surface: #ffffff;
-  --surface-2: #eef0f8;
-  --text: #141726;
-  --muted: #5d6378;
-  --border: #e1e4ef;
-  --accent-a: #38bdf8;
-  --accent-b: #7c3aed;
-  --accent: #5b6cf0;
-  --menu-bg: #2b2b2b;
-  --menu-text: #f2f2f2;
-  --menu-hover: #3d3d3d;
-  --shadow: 0 20px 50px -20px rgba(40, 45, 90, .25);
+  --surface-2: #eeedea;
+  --text: #1b1a19;
+  --muted: #5c5a57;
+  --border: #e2e0dc;
+  --accent: #005fb8;
+  --accent-hover: #1a6ec0;
+  --on-accent: #ffffff;
+  --menu-bg: #f9f9f9;
+  --menu-text: #1b1b1b;
+  --menu-hover: #ebebeb;
+  --menu-line: #e3e3e3;
+  --shadow: 0 8px 24px -12px rgba(0, 0, 0, .18);
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0d0f17;
-    --surface: #151826;
-    --surface-2: #1c2032;
-    --text: #eceefa;
-    --muted: #9aa0b8;
-    --border: #262a3d;
-    --accent: #8b9bff;
-    --shadow: 0 20px 50px -20px rgba(0, 0, 0, .6);
+    --bg: #1c1c1c;
+    --surface: #262626;
+    --surface-2: #2e2e2e;
+    --text: #f3f3f3;
+    --muted: #b0ada9;
+    --border: #363636;
+    --accent: #60cdff;
+    --accent-hover: #74d3ff;
+    --on-accent: #000000;
+    --menu-bg: #2c2c2c;
+    --menu-text: #f2f2f2;
+    --menu-hover: #3a3a3a;
+    --menu-line: #3f3f3f;
+    --shadow: 0 8px 24px -12px rgba(0, 0, 0, .6);
+    color-scheme: dark;
   }
 }
 * { box-sizing: border-box; }
@@ -48,8 +59,10 @@ body {
   font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:not(:hover) { text-decoration: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
 
 /* language switch: content exists in both languages, CSS shows one */
@@ -58,132 +71,146 @@ a:hover { text-decoration: underline; }
 /* nav */
 nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: var(--text); }
-.brand:hover { text-decoration: none; }
 .brand img { width: 32px; height: 32px; }
-.nav-links { display: flex; align-items: center; gap: 18px; font-size: 15px; }
+.nav-links { display: flex; align-items: center; gap: 20px; font-size: 15px; }
 .nav-links a { color: var(--muted); }
-.lang {
-  display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden;
-}
+.nav-links a:hover { color: var(--text); }
+.lang { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
 .lang button {
   border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 13px;
-  padding: 4px 10px; cursor: pointer;
+  min-height: 34px; padding: 0 12px; cursor: pointer;
 }
-[data-lang="de"] .lang [data-set="de"], [data-lang="en"] .lang [data-set="en"] {
-  background: var(--surface-2); color: var(--text); font-weight: 600;
-}
+.lang button[aria-pressed="true"] { background: var(--surface-2); color: var(--text); font-weight: 600; }
+@media (pointer: coarse) { .lang button { min-height: 44px; padding: 0 14px; } }
 
 /* hero */
-.hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; padding-top: 56px; padding-bottom: 72px; }
+.hero { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; padding-top: 64px; padding-bottom: 88px; }
 .hero > * { min-width: 0; }
-.eyebrow {
-  display: inline-block; font-size: 13px; font-weight: 600; color: var(--accent);
-  background: var(--surface-2); border-radius: 999px; padding: 4px 12px; margin-bottom: 18px;
-}
-h1 { font-size: clamp(36px, 5vw, 56px); line-height: 1.08; margin: 0 0 18px; letter-spacing: -.02em; }
-.grad {
-  background: linear-gradient(120deg, var(--accent-a), var(--accent-b));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
-.lead { font-size: 19px; color: var(--muted); margin: 0 0 30px; max-width: 34em; }
+h1 { font-size: clamp(36px, 4.8vw, 54px); font-weight: 600; line-height: 1.08; margin: 0 0 20px; letter-spacing: -.02em; text-wrap: balance; }
+h1 .accent { color: var(--accent); }
+.lead { font-size: 19px; color: var(--muted); margin: 0 0 30px; max-width: 32em; text-wrap: pretty; }
 .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .btn {
-  display: inline-flex; align-items: center; gap: 10px; border-radius: 12px; padding: 13px 22px;
+  display: inline-flex; align-items: center; gap: 10px; border-radius: 6px; padding: 12px 20px;
   font-weight: 600; font-size: 16px; border: 1px solid var(--border); color: var(--text);
-  background: var(--surface);
+  background: var(--surface); text-decoration: none;
+  transition: background-color .12s ease-out, border-color .12s ease-out;
 }
-.btn:hover { text-decoration: none; filter: brightness(1.04); }
-.btn.primary {
-  border: 0; color: #fff; background: linear-gradient(120deg, #3aa7f0, #7046e8);
-  box-shadow: 0 10px 30px -10px rgba(112, 70, 232, .7);
-}
+.btn:hover { background: var(--surface-2); text-decoration: none; }
+.btn.primary { border-color: transparent; color: var(--on-accent); background: var(--accent); }
+.btn.primary:hover { background: var(--accent-hover); }
 .btn svg { width: 20px; height: 20px; flex: none; }
-.meta { font-size: 14px; color: var(--muted); margin-top: 14px; }
+.meta { font-size: 14px; color: var(--muted); margin: 16px 0 0; }
+.notice { font-size: 14px; color: var(--muted); margin: 6px 0 0; max-width: 34em; }
+.phone-note {
+  display: none; font-size: 14px; margin: 14px 0 0; padding: 10px 14px; border-radius: 6px;
+  background: var(--surface-2); color: var(--text);
+}
+@media (pointer: coarse) and (max-width: 860px) { .phone-note { display: block; } }
 
 /* explorer menu illustration */
-.demo { position: relative; min-height: 360px; }
-.file {
-  position: absolute; left: 4%; top: 8%; width: 120px; text-align: center; font-size: 13px; color: var(--muted);
+.demo { display: flex; flex-direction: column; align-items: flex-start; }
+.file { width: 112px; text-align: center; font-size: 13px; color: var(--muted); }
+.thumb {
+  width: 96px; height: 96px; margin: 0 auto 6px; border-radius: 6px; padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
 }
-.file .thumb {
-  width: 96px; height: 96px; margin: 0 auto 6px; border-radius: 10px; background: var(--surface);
-  border: 2px solid var(--accent); display: grid; place-items: center; box-shadow: var(--shadow);
-}
-.file .thumb span {
-  width: 60px; height: 44px; border-radius: 50%; background: linear-gradient(120deg, var(--accent-a), var(--accent-b));
-}
+.photo { display: block; width: 100%; height: 100%; border-radius: 3px; }
+.menus { display: flex; align-items: flex-start; margin: 4px 0 0 64px; }
 .menu {
-  position: absolute; background: var(--menu-bg); color: var(--menu-text); border-radius: 8px;
-  padding: 5px; font-size: 13.5px; box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
-  border: 1px solid #3a3a3a; font-family: "Segoe UI", system-ui, sans-serif;
+  background: var(--menu-bg); color: var(--menu-text); border-radius: 8px; padding: 5px;
+  font: 13.5px/1.2 "Segoe UI", system-ui, sans-serif;
+  box-shadow: var(--shadow); border: 1px solid var(--menu-line);
 }
-.menu div { padding: 6px 30px 6px 12px; border-radius: 4px; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
-.menu hr { border: 0; border-top: 1px solid #3f3f3f; margin: 4px 6px; }
+.menu div { padding: 8px 12px; border-radius: 4px; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+.menu hr { border: 0; border-top: 1px solid var(--menu-line); margin: 4px 6px; }
 .menu .on { background: var(--menu-hover); }
-.menu .ico { width: 16px; height: 16px; border-radius: 4px; flex: none; }
-.menu .arrow { margin-left: auto; padding-left: 26px; opacity: .8; }
-.menu.main { left: 26%; top: 18%; width: 240px; }
-.menu.sub { left: 64%; top: 43%; width: 200px; animation: pop .5s .4s both; }
-@keyframes pop { from { opacity: 0; transform: translateX(-8px); } }
+.menu .ico { width: 16px; height: 16px; flex: none; }
+.menu .arrow { margin-left: auto; padding-left: 24px; opacity: .8; }
+.menu.main { width: 220px; position: relative; z-index: 1; }
+/* the submenu opens beside the highlighted "Converta" row */
+.menu.sub { width: 176px; margin: 72px 0 0 -4px; position: relative; z-index: 2; animation: open .3s .3s cubic-bezier(.25, 1, .5, 1) both; }
+@keyframes open { from { transform: translateX(-4px); } }
+@media (prefers-reduced-motion: reduce) {
+  .menu.sub { animation: none; }
+  html { scroll-behavior: auto; }
+  .btn { transition: none; }
+}
 
 /* sections */
-section { padding: 72px 0; border-top: 1px solid var(--border); }
-h2 { font-size: 32px; margin: 0 0 12px; letter-spacing: -.01em; }
-.sub-lead { color: var(--muted); margin: 0 0 36px; max-width: 40em; }
-.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-.card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px;
-}
-.card h3 { margin: 10px 0 6px; font-size: 17px; }
-.card p { margin: 0; color: var(--muted); font-size: 15px; }
-.badge {
-  width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-size: 20px;
-  background: var(--surface-2);
-}
+section { padding: 80px 0; border-top: 1px solid var(--border); }
+h2 { font-size: 32px; line-height: 1.2; margin: 0 0 36px; letter-spacing: -.015em; }
+.section-note { color: var(--muted); margin: -24px 0 32px; }
+h3 { font-size: 17px; margin: 0 0 6px; }
+
+.reasons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 36px 56px; max-width: 900px; }
+.reason h3 { display: flex; align-items: center; gap: 10px; }
+.reason svg { width: 22px; height: 22px; flex: none; color: var(--accent); }
+.reason p { margin: 0; color: var(--muted); max-width: 34em; }
 
 /* formats table */
-.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.table-wrap { border: 1px solid var(--border); border-radius: 8px; background: var(--surface); overflow: hidden; }
 table { width: 100%; border-collapse: collapse; font-size: 15px; }
 th, td { text-align: left; padding: 14px 18px; border-bottom: 1px solid var(--border); vertical-align: top; }
 tr:last-child td { border-bottom: 0; }
 th { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); background: var(--surface-2); }
-td:first-child { font-weight: 600; white-space: nowrap; }
-td small { display: block; font-weight: 400; color: var(--muted); }
+td:first-child { font-weight: 600; width: 30%; }
+td small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
 .chip {
-  display: inline-block; font-size: 13px; padding: 2px 8px; margin: 2px 2px 2px 0; border-radius: 6px;
-  background: var(--surface-2); font-weight: 600;
+  display: inline-block; font-size: 13px; padding: 2px 8px; margin: 2px 2px 2px 0; border-radius: 4px;
+  background: var(--surface-2); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+@media (max-width: 620px) {
+  thead { display: none; }
+  table, tbody, tr, td { display: block; width: 100%; }
+  tr { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  tr:last-child { border-bottom: 0; }
+  td { padding: 0; border: 0; }
+  td:first-child { width: auto; margin-bottom: 8px; }
 }
 
 /* steps */
-.steps { counter-reset: s; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; counter-reset: s; }
 .step { counter-increment: s; }
 .step::before {
-  content: counter(s); display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
-  background: linear-gradient(120deg, var(--accent-a), var(--accent-b)); color: #fff; font-weight: 700; margin-bottom: 10px;
+  content: counter(s); display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+  border: 1.5px solid var(--accent); color: var(--accent); font-weight: 700; font-size: 15px; margin-bottom: 14px;
 }
+.step p { margin: 0; color: var(--muted); }
 kbd {
-  font: 600 13px/1 "Segoe UI", system-ui, sans-serif; padding: 3px 7px; border-radius: 6px;
-  border: 1px solid var(--border); background: var(--surface-2);
+  font: 600 13px/1 "Segoe UI", system-ui, sans-serif; padding: 3px 7px; border-radius: 4px;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
 }
 
 /* faq */
-details { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; margin-bottom: 12px; }
-summary { cursor: pointer; font-weight: 600; }
+details { border-bottom: 1px solid var(--border); padding: 18px 0; max-width: 760px; }
+details:first-of-type { border-top: 1px solid var(--border); }
+summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
 details p { color: var(--muted); margin: 10px 0 0; }
+details:target summary, details[open] summary { color: var(--text); }
+
+/* closing download */
+.closing { text-align: center; }
+.closing h2 { margin-bottom: 24px; }
+.closing .cta { justify-content: center; }
 
 footer { border-top: 1px solid var(--border); padding: 28px 0 40px; color: var(--muted); font-size: 14px; }
 footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
 
 @media (max-width: 860px) {
-  .hero { grid-template-columns: 1fr; padding-top: 24px; }
-  .demo { min-height: 320px; }
-  .grid, .steps { grid-template-columns: 1fr; }
+  .hero { grid-template-columns: 1fr; padding-top: 24px; padding-bottom: 64px; gap: 40px; }
+  .reasons, .steps { grid-template-columns: 1fr; gap: 28px; }
   .nav-links .hide-sm { display: none; }
+  section { padding: 64px 0; }
 }
-@media (max-width: 520px) {
-  .menu.main { left: 0; top: 40%; }
-  .menu.sub { left: 30%; top: 62%; }
-  .file { left: 0; top: 0; }
+@media (max-width: 480px) {
+  .menus { margin-left: 0; }
+  .menu { font-size: 12px; }
+  .menu div { padding: 7px 9px; }
+  .menu .arrow { padding-left: 10px; }
+  .menu.main { width: 172px; }
+  .menu.sub { width: 156px; margin-top: 64px; }
 }
 </style>
 </head>
@@ -193,11 +220,11 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   <nav>
     <a class="brand" href="/"><img src="/logo.png" alt=""> Converta</a>
     <div class="nav-links">
-      <a class="hide-sm" href="#formate"><span lang="de">Formate</span><span lang="en">Formats</span></a>
+      <a class="hide-sm" href="#formats"><span lang="en">Formats</span><span lang="de">Formate</span></a>
       <a class="hide-sm" href="#faq">FAQ</a>
       <a class="github-link" href="https://github.com/Erennkrb/Converta">GitHub</a>
-      <div class="lang" role="group" aria-label="Sprache / Language">
-        <button type="button" data-set="de">DE</button><button type="button" data-set="en">EN</button>
+      <div class="lang" role="group" aria-label="Language / Sprache">
+        <button type="button" data-set="en" aria-pressed="true">EN</button><button type="button" data-set="de" aria-pressed="false">DE</button>
       </div>
     </div>
   </nav>
@@ -206,120 +233,113 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <main>
   <div class="wrap hero">
     <div>
-      <span class="eyebrow"><span lang="de">Kostenlos · Open Source · Windows</span><span lang="en">Free · Open source · Windows</span></span>
       <h1>
-        <span lang="de">Dateien umwandeln.<br><span class="grad">Per Rechtsklick.</span></span>
-        <span lang="en">Convert any file.<br><span class="grad">Right from a right-click.</span></span>
+        <span lang="en">Convert files.<br><span class="accent">With a right-click.</span></span>
+        <span lang="de">Dateien umwandeln.<br><span class="accent">Per Rechtsklick.</span></span>
       </h1>
       <p class="lead">
-        <span lang="de">Bilder, Audio, Video, PDF, Office-Dokumente, 3D-Modelle und CAD – direkt im Explorer in ein anderes Format bringen. Kein Upload, keine Werbung, alles bleibt auf deinem PC.</span>
-        <span lang="en">Images, audio, video, PDF, Office documents, 3D models and CAD – change their format right inside Explorer. No uploads, no ads, everything stays on your PC.</span>
+        <span lang="en">Images, audio, video, PDFs, Office documents, 3D models and CAD, converted right inside Windows Explorer. Free and open source. Nothing gets uploaded.</span>
+        <span lang="de">Bilder, Audio, Video, PDFs, Office-Dokumente, 3D-Modelle und CAD, direkt im Windows-Explorer umgewandelt. Kostenlos und Open Source. Nichts wird hochgeladen.</span>
       </p>
       <div class="cta">
         <a class="btn primary download-link" href="https://github.com/Erennkrb/Converta/releases/latest">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg>
-          <span lang="de">Für Windows herunterladen</span><span lang="en">Download for Windows</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg>
+          <span lang="en">Download for Windows</span><span lang="de">Für Windows herunterladen</span>
         </a>
         <a class="btn github-link" href="https://github.com/Erennkrb/Converta">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.3 1.9 1.3 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.3-3.2-.2-.3-.6-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.2 2.9.1 3.2.8.8 1.3 1.9 1.3 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z"/></svg>
-          <span lang="de">Quellcode</span><span lang="en">Source code</span>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.3 1.9 1.3 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.3-3.2-.2-.3-.6-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.2 2.9.1 3.2.8.8 1.3 1.9 1.3 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z"/></svg>
+          <span lang="en">Source on GitHub</span><span lang="de">Quellcode auf GitHub</span>
         </a>
       </div>
       <p class="meta">
-        <span class="release-info"></span>
-        <span lang="de">Windows 10 &amp; 11 · 64-Bit</span><span lang="en">Windows 10 &amp; 11 · 64-bit</span>
+        <span class="release-info"></span><span lang="en">Windows 10 &amp; 11, 64-bit · AGPL-3.0</span><span lang="de">Windows 10 &amp; 11, 64-Bit · AGPL-3.0</span>
+      </p>
+      <p class="notice">
+        <span lang="en">Windows may say “Unknown publisher” because the installer isn't signed yet. Click <b>More info</b> → <b>Run anyway</b>. <a href="#smartscreen">Why?</a></span>
+        <span lang="de">Windows meldet evtl. „Unbekannter Herausgeber“, weil der Installer noch nicht signiert ist. Klick auf <b>Weitere Informationen</b> → <b>Trotzdem ausführen</b>. <a href="#smartscreen">Warum?</a></span>
+      </p>
+      <p class="phone-note">
+        <span lang="en">Converta runs on Windows PCs. Open this page on your computer to install it.</span>
+        <span lang="de">Converta läuft auf Windows-PCs. Öffne diese Seite am Computer, um es zu installieren.</span>
       </p>
     </div>
 
     <div class="demo" aria-hidden="true">
-      <div class="file"><div class="thumb"><span></span></div>urlaub.png</div>
-      <div class="menu main">
-        <div lang="de">Öffnen</div><div lang="en">Open</div>
-        <div lang="de">Mit Fotos bearbeiten</div><div lang="en">Edit with Photos</div>
-        <hr>
-        <div class="on"><img class="ico" src="/logo.png" alt="">Converta<span class="arrow">›</span></div>
-        <hr>
-        <div lang="de">Kopieren</div><div lang="en">Copy</div>
-        <div lang="de">Umbenennen</div><div lang="en">Rename</div>
-        <div lang="de">Eigenschaften</div><div lang="en">Properties</div>
-      </div>
-      <div class="menu sub">
-        <div lang="de">In JPG umwandeln</div><div lang="en">Convert to JPG</div>
-        <div class="on" lang="de">In WEBP umwandeln</div><div class="on" lang="en">Convert to WEBP</div>
-        <div lang="de">In AVIF umwandeln</div><div lang="en">Convert to AVIF</div>
-        <div lang="de">In ICO umwandeln</div><div lang="en">Convert to ICO</div>
-        <hr>
-        <div lang="de">In PDF umwandeln</div><div lang="en">Convert to PDF</div>
+      <div class="file"><div class="thumb"><svg class="photo" viewBox="0 0 80 80" preserveAspectRatio="none"><rect width="80" height="80" fill="#9fd4f5"/><circle cx="56" cy="22" r="8" fill="#ffd96a"/><path d="M0 58 Q18 42 38 56 T80 52 V80 H0z" fill="#3f8f5a"/><path d="M0 70 Q26 58 52 68 T80 64 V80 H0z" fill="#2f7449"/></svg></div><span lang="en">holiday.png</span><span lang="de">urlaub.png</span></div>
+      <div class="menus">
+        <div class="menu main">
+          <div lang="en">Open</div><div lang="de">Öffnen</div>
+          <div lang="en">Edit with Photos</div><div lang="de">Mit Fotos bearbeiten</div>
+          <hr>
+          <div class="on"><img class="ico" src="/logo.png" alt="">Converta<span class="arrow">›</span></div>
+          <hr>
+          <div lang="en">Copy</div><div lang="de">Kopieren</div>
+          <div lang="en">Rename</div><div lang="de">Umbenennen</div>
+          <div lang="en">Properties</div><div lang="de">Eigenschaften</div>
+        </div>
+        <div class="menu sub">
+          <div lang="en">Convert to JPG</div><div lang="de">In JPG umwandeln</div>
+          <div class="on" lang="en">Convert to WEBP</div><div class="on" lang="de">In WEBP umwandeln</div>
+          <div lang="en">Convert to AVIF</div><div lang="de">In AVIF umwandeln</div>
+          <div lang="en">Convert to ICO</div><div lang="de">In ICO umwandeln</div>
+          <hr>
+          <div lang="en">Convert to PDF</div><div lang="de">In PDF umwandeln</div>
+        </div>
       </div>
     </div>
   </div>
 
   <section>
     <div class="wrap">
-      <h2><span lang="de">Alles, was du brauchst</span><span lang="en">Everything you need</span></h2>
-      <p class="sub-lead">
-        <span lang="de">Kein extra Programm öffnen, keine Website, kein Hochladen. Rechtsklick, Format wählen, fertig.</span>
-        <span lang="en">No extra app to open, no website, no uploads. Right-click, pick a format, done.</span>
-      </p>
-      <div class="grid">
-        <div class="card"><div class="badge">🖼️</div>
-          <h3><span lang="de">Bilder</span><span lang="en">Images</span></h3>
-          <p><span lang="de">PNG, JPG, WEBP, AVIF, GIF, ICO und mehr – mit Transparenz und Animationen.</span><span lang="en">PNG, JPG, WEBP, AVIF, GIF, ICO and more – keeping transparency and animation.</span></p></div>
-        <div class="card"><div class="badge">🎵</div>
-          <h3>Audio</h3>
-          <p><span lang="de">MP3, WAV, FLAC, OGG, M4A, OPUS – oder den Ton aus einem Video holen.</span><span lang="en">MP3, WAV, FLAC, OGG, M4A, OPUS – or pull the sound out of a video.</span></p></div>
-        <div class="card"><div class="badge">🎬</div>
-          <h3>Video</h3>
-          <p><span lang="de">MP4, MKV, WEBM, MOV, AVI und Video zu GIF – mit Fortschrittsanzeige.</span><span lang="en">MP4, MKV, WEBM, MOV, AVI and video to GIF – with a progress bar.</span></p></div>
-        <div class="card"><div class="badge">📄</div>
-          <h3><span lang="de">PDF ↔ Word</span><span lang="en">PDF ↔ Word</span></h3>
-          <p><span lang="de">PDF in Word und zurück, PDF-Seiten als Bilder, Excel und PowerPoint als PDF.</span><span lang="en">PDF to Word and back, PDF pages as images, Excel and PowerPoint to PDF.</span></p></div>
-        <div class="card"><div class="badge">🧊</div>
-          <h3><span lang="de">3D-Druck &amp; CAD</span><span lang="en">3D printing &amp; CAD</span></h3>
-          <p><span lang="de">STL, OBJ, 3MF und mehr untereinander – und STEP/IGES direkt zu STL oder 3MF für den Slicer.</span><span lang="en">STL, OBJ, 3MF and more between each other – and STEP/IGES straight to STL or 3MF for your slicer.</span></p></div>
-        <div class="card"><div class="badge">🎞️</div>
-          <h3><span lang="de">Bild auswählen</span><span lang="en">Frame picker</span></h3>
-          <p><span lang="de">Aus GIFs und Videos genau das Einzelbild wählen, das du speichern willst.</span><span lang="en">Choose the exact frame you want from a GIF or video.</span></p></div>
-        <div class="card"><div class="badge">📚</div>
-          <h3><span lang="de">Viele auf einmal</span><span lang="en">Many at once</span></h3>
-          <p><span lang="de">Mehrere Dateien markieren – Converta wandelt alle nacheinander um.</span><span lang="en">Select several files – Converta converts them one after another.</span></p></div>
-        <div class="card"><div class="badge">🛟</div>
-          <h3><span lang="de">Nichts geht verloren</span><span lang="en">Nothing gets lost</span></h3>
-          <p><span lang="de">Das Original bleibt immer erhalten, nichts wird überschrieben.</span><span lang="en">Your original always stays, nothing is ever overwritten.</span></p></div>
-        <div class="card"><div class="badge">🔒</div>
-          <h3><span lang="de">Privat</span><span lang="en">Private</span></h3>
-          <p><span lang="de">Alles passiert offline auf deinem PC. Keine Konten, kein Tracking, Open Source.</span><span lang="en">Everything runs offline on your PC. No accounts, no tracking, open source.</span></p></div>
+      <h2><span lang="en">Why Converta</span><span lang="de">Warum Converta</span></h2>
+      <div class="reasons">
+        <div class="reason">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg><span lang="en">Free and open source</span><span lang="de">Kostenlos und Open Source</span></h3>
+          <p><span lang="en">No ads, no subscription, no account. Every line of code is on GitHub.</span><span lang="de">Keine Werbung, kein Abo, kein Konto. Der komplette Code liegt auf GitHub.</span></p>
+        </div>
+        <div class="reason">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span lang="en">Your files stay on your PC</span><span lang="de">Deine Dateien bleiben auf deinem PC</span></h3>
+          <p><span lang="en">Everything converts offline. Nothing is uploaded, nothing is tracked.</span><span lang="de">Umgewandelt wird offline. Nichts wird hochgeladen, nichts getrackt.</span></p>
+        </div>
+        <div class="reason">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8l4 4v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M3 8v12a2 2 0 0 0 2 2h10"/></svg><span lang="en">Your originals stay untouched</span><span lang="de">Das Original bleibt unangetastet</span></h3>
+          <p><span lang="en">The converted file lands next to the original, never over it. Select several files and they're all done in one go.</span><span lang="de">Die neue Datei landet neben dem Original, nie darüber. Mehrere Dateien markieren, alle werden in einem Rutsch umgewandelt.</span></p>
+        </div>
+        <div class="reason">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 12h4M17 12h4"/></svg><span lang="en">Pick the exact frame</span><span lang="de">Genau das richtige Bild</span></h3>
+          <p><span lang="en">Turning a GIF or video into a still image? Choose the frame you want in a small preview window.</span><span lang="de">GIF oder Video zu einem Einzelbild? Wähle in einer kleinen Vorschau genau das Bild, das du willst.</span></p>
+        </div>
       </div>
     </div>
   </section>
 
-  <section id="formate">
+  <section id="formats">
     <div class="wrap">
-      <h2><span lang="de">Unterstützte Formate</span><span lang="en">Supported formats</span></h2>
-      <p class="sub-lead"><span lang="de">Mehrere Dateien markieren wandelt alle auf einmal um. Nichts wird überschrieben.</span><span lang="en">Select several files to convert them all at once. Nothing is ever overwritten.</span></p>
+      <h2><span lang="en">Supported formats</span><span lang="de">Unterstützte Formate</span></h2>
+      <p class="section-note"><span lang="en">Missing a format? <a href="https://github.com/Erennkrb/Converta/issues">Tell us on GitHub</a>.</span><span lang="de">Dir fehlt ein Format? <a href="https://github.com/Erennkrb/Converta/issues">Sag es uns auf GitHub</a>.</span></p>
       <div class="table-wrap">
         <table>
-          <thead><tr><th><span lang="de">Von</span><span lang="en">From</span></th><th><span lang="de">Nach</span><span lang="en">To</span></th></tr></thead>
+          <thead><tr><th><span lang="en">From</span><span lang="de">Von</span></th><th><span lang="en">To</span><span lang="de">Nach</span></th></tr></thead>
           <tbody>
-            <tr><td><span lang="de">Bilder</span><span lang="en">Images</span><small>png jpg webp avif bmp gif tiff ico</small></td>
-              <td><span class="chip">PNG</span><span class="chip">JPG</span><span class="chip">WEBP</span><span class="chip">AVIF</span><span class="chip">BMP</span><span class="chip">GIF</span><span class="chip">TIFF</span><span class="chip">ICO</span><span class="chip">PDF</span> · <span lang="de">GIF auch zu</span><span lang="en">GIF also to</span> <span class="chip">MP4</span><span class="chip">WEBM</span></td></tr>
+            <tr><td><span lang="en">Images</span><span lang="de">Bilder</span><small>png jpg webp avif bmp gif tiff ico</small></td>
+              <td><span class="chip">PNG</span><span class="chip">JPG</span><span class="chip">WEBP</span><span class="chip">AVIF</span><span class="chip">BMP</span><span class="chip">GIF</span><span class="chip">TIFF</span><span class="chip">ICO</span><span class="chip">PDF</span> · <span lang="en">GIF also to</span><span lang="de">GIF auch zu</span> <span class="chip">MP4</span><span class="chip">WEBM</span></td></tr>
             <tr><td>Audio<small>mp3 wav flac ogg m4a aac opus wma aiff</small></td>
               <td><span class="chip">MP3</span><span class="chip">WAV</span><span class="chip">FLAC</span><span class="chip">OGG</span><span class="chip">M4A</span><span class="chip">OPUS</span><span class="chip">AAC</span><span class="chip">WMA</span></td></tr>
             <tr><td>Video<small>mp4 mkv webm mov avi wmv flv m4v mpg 3gp</small></td>
-              <td><span class="chip">MP4</span><span class="chip">MKV</span><span class="chip">WEBM</span><span class="chip">MOV</span><span class="chip">AVI</span><span class="chip">GIF</span> · <span lang="de">Ton als</span><span lang="en">audio as</span> <span class="chip">MP3</span><span class="chip">WAV</span><span class="chip">FLAC</span><span class="chip">M4A</span><span class="chip">OGG</span> · <span lang="de">Einzelbild als</span><span lang="en">still as</span> <span class="chip">PNG</span><span class="chip">JPG</span></td></tr>
+              <td><span class="chip">MP4</span><span class="chip">MKV</span><span class="chip">WEBM</span><span class="chip">MOV</span><span class="chip">AVI</span><span class="chip">GIF</span> · <span lang="en">audio as</span><span lang="de">Ton als</span> <span class="chip">MP3</span><span class="chip">WAV</span><span class="chip">FLAC</span><span class="chip">M4A</span><span class="chip">OGG</span> · <span lang="en">still image as</span><span lang="de">Einzelbild als</span> <span class="chip">PNG</span><span class="chip">JPG</span></td></tr>
             <tr><td>PDF</td>
-              <td><span class="chip">Word</span><span class="chip">TXT</span> · <span lang="de">Seiten als</span><span lang="en">pages as</span> <span class="chip">PNG</span><span class="chip">JPG</span></td></tr>
+              <td><span class="chip">Word</span><span class="chip">TXT</span> · <span lang="en">pages as</span><span lang="de">Seiten als</span> <span class="chip">PNG</span><span class="chip">JPG</span></td></tr>
             <tr><td>Word<small>docx doc odt rtf</small></td>
               <td><span class="chip">PDF</span><span class="chip">DOCX</span><span class="chip">ODT</span><span class="chip">RTF</span><span class="chip">TXT</span></td></tr>
             <tr><td>Excel<small>xlsx xls ods</small></td>
               <td><span class="chip">PDF</span><span class="chip">XLSX</span><span class="chip">ODS</span><span class="chip">CSV</span></td></tr>
             <tr><td>PowerPoint<small>pptx ppt odp</small></td>
               <td><span class="chip">PDF</span><span class="chip">PPTX</span><span class="chip">ODP</span></td></tr>
-            <tr><td><span lang="de">3D-Modelle</span><span lang="en">3D models</span><small>stl obj 3mf ply off glb gltf</small></td>
+            <tr><td><span lang="en">3D models</span><span lang="de">3D-Modelle</span><small>stl obj 3mf ply off glb gltf</small></td>
               <td><span class="chip">STL</span><span class="chip">OBJ</span><span class="chip">3MF</span><span class="chip">PLY</span><span class="chip">GLB</span><span class="chip">OFF</span></td></tr>
             <tr><td>CAD<small>step stp iges igs</small></td>
-              <td><span class="chip">STL</span><span class="chip">3MF</span><span class="chip">OBJ</span><span class="chip">PLY</span><span class="chip">GLB</span> · <span lang="de">in Millimetern, bereit für den Slicer</span><span lang="en">in millimetres, ready for your slicer</span></td></tr>
-            <tr><td><span lang="de">DXF-Zeichnungen</span><span lang="en">DXF drawings</span></td>
+              <td><span class="chip">STL</span><span class="chip">3MF</span><span class="chip">OBJ</span><span class="chip">PLY</span><span class="chip">GLB</span> · <span lang="en">in millimetres, ready for your slicer</span><span lang="de">in Millimetern, bereit für den Slicer</span></td></tr>
+            <tr><td><span lang="en">DXF drawings</span><span lang="de">DXF-Zeichnungen</span></td>
               <td><span class="chip">PDF</span><span class="chip">SVG</span><span class="chip">PNG</span></td></tr>
           </tbody>
         </table>
@@ -329,20 +349,19 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 
   <section>
     <div class="wrap">
-      <h2><span lang="de">So geht's</span><span lang="en">How it works</span></h2>
-      <p class="sub-lead"></p>
+      <h2><span lang="en">How it works</span><span lang="de">So geht's</span></h2>
       <div class="steps">
-        <div class="step card">
-          <h3><span lang="de">Installieren</span><span lang="en">Install</span></h3>
-          <p><span lang="de">Setup herunterladen und durchklicken. Das Rechtsklick-Menü wird automatisch eingerichtet.</span><span lang="en">Download the setup and click through it. The right-click menu is set up automatically.</span></p>
+        <div class="step">
+          <h3><span lang="en">Install</span><span lang="de">Installieren</span></h3>
+          <p><span lang="en">Run the setup. It adds Converta to your right-click menu.</span><span lang="de">Setup ausführen. Es fügt Converta zu deinem Rechtsklick-Menü hinzu.</span></p>
         </div>
-        <div class="step card">
-          <h3><span lang="de">Rechtsklick</span><span lang="en">Right-click</span></h3>
-          <p><span lang="de">Auf eine Datei: <kbd>Shift</kbd> + Rechtsklick oder „Weitere Optionen anzeigen“ → <b>Converta</b>.</span><span lang="en">On a file: <kbd>Shift</kbd> + right-click or "Show more options" → <b>Converta</b>.</span></p>
+        <div class="step">
+          <h3><span lang="en">Right-click a file</span><span lang="de">Datei rechtsklicken</span></h3>
+          <p><span lang="en">On Windows 11 use <kbd>Shift</kbd> + right-click, or “Show more options”, then <b>Converta</b>.</span><span lang="de">Unter Windows 11 mit <kbd>Shift</kbd> + Rechtsklick oder „Weitere Optionen anzeigen“, dann <b>Converta</b>.</span></p>
         </div>
-        <div class="step card">
-          <h3><span lang="de">Format wählen</span><span lang="en">Pick a format</span></h3>
-          <p><span lang="de">Die neue Datei erscheint direkt neben dem Original.</span><span lang="en">The new file appears right next to the original.</span></p>
+        <div class="step">
+          <h3><span lang="en">Pick a format</span><span lang="de">Format wählen</span></h3>
+          <p><span lang="en">The converted file appears right next to the original.</span><span lang="de">Die neue Datei erscheint direkt neben dem Original.</span></p>
         </div>
       </div>
     </div>
@@ -351,35 +370,46 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   <section id="faq">
     <div class="wrap">
       <h2>FAQ</h2>
-      <p class="sub-lead"></p>
-      <details>
-        <summary><span lang="de">Windows warnt beim Installieren – ist das sicher?</span><span lang="en">Windows shows a warning when installing – is it safe?</span></summary>
-        <p><span lang="de">Converta ist (noch) nicht mit einem kostenpflichtigen Zertifikat signiert, deshalb zeigt SmartScreen „Unbekannter Herausgeber“. Klicke auf „Weitere Informationen“ → „Trotzdem ausführen“. Der komplette Quellcode ist auf GitHub einsehbar.</span><span lang="en">Converta isn't signed with a paid certificate (yet), so SmartScreen shows "Unknown publisher". Click "More info" → "Run anyway". The full source code is on GitHub.</span></p>
+      <details id="smartscreen">
+        <summary><span lang="en">Windows warns me during install. Is it safe?</span><span lang="de">Windows warnt beim Installieren. Ist das sicher?</span></summary>
+        <p><span lang="en">Converta isn't signed with a paid certificate (yet), so SmartScreen shows “Unknown publisher”. Click “More info” → “Run anyway”. The full source code is on GitHub if you want to check it.</span><span lang="de">Converta ist (noch) nicht mit einem kostenpflichtigen Zertifikat signiert, deshalb zeigt SmartScreen „Unbekannter Herausgeber“. Klick auf „Weitere Informationen“ → „Trotzdem ausführen“. Der komplette Quellcode liegt auf GitHub, wenn du ihn prüfen willst.</span></p>
       </details>
       <details>
-        <summary><span lang="de">Was brauche ich für Word, Excel und PowerPoint?</span><span lang="en">What do I need for Word, Excel and PowerPoint?</span></summary>
-        <p><span lang="de">Microsoft Office oder das kostenlose <a href="https://www.libreoffice.org/download/">LibreOffice</a>. PDF → Word funktioniert auch ohne.</span><span lang="en">Microsoft Office or the free <a href="https://www.libreoffice.org/download/">LibreOffice</a>. PDF → Word works without either.</span></p>
+        <summary><span lang="en">I can't find Converta in my right-click menu.</span><span lang="de">Ich finde Converta nicht im Rechtsklick-Menü.</span></summary>
+        <p><span lang="en">On Windows 11 it's in the classic menu: click “Show more options”, or hold <kbd>Shift</kbd> while you right-click. It only appears on file types Converta supports.</span><span lang="de">Unter Windows 11 steht es im klassischen Menü: „Weitere Optionen anzeigen“ klicken oder beim Rechtsklick <kbd>Shift</kbd> halten. Es erscheint nur bei Dateitypen, die Converta unterstützt.</span></p>
       </details>
       <details>
-        <summary><span lang="de">Warum wird beim ersten Video etwas heruntergeladen?</span><span lang="en">Why is something downloaded on the first video?</span></summary>
-        <p><span lang="de">Für Audio und Video nutzt Converta FFmpeg. Damit der Installer klein bleibt, wird es erst beim ersten Bedarf einmalig geladen (ca. 110 MB, Prüfsumme wird kontrolliert).</span><span lang="en">Converta uses FFmpeg for audio and video. To keep the installer small it's downloaded once when first needed (about 110 MB, checksum verified).</span></p>
+        <summary><span lang="en">What do I need for Word, Excel and PowerPoint?</span><span lang="de">Was brauche ich für Word, Excel und PowerPoint?</span></summary>
+        <p><span lang="en">Microsoft Office or the free <a href="https://www.libreoffice.org/download/">LibreOffice</a>. PDF → Word works without either.</span><span lang="de">Microsoft Office oder das kostenlose <a href="https://www.libreoffice.org/download/">LibreOffice</a>. PDF → Word funktioniert auch ohne.</span></p>
       </details>
       <details>
-        <summary><span lang="de">Wo ist der Eintrag im Rechtsklick-Menü?</span><span lang="en">Where's the entry in the right-click menu?</span></summary>
-        <p><span lang="de">Unter Windows 11 im klassischen Menü: „Weitere Optionen anzeigen“ oder direkt <kbd>Shift</kbd> + Rechtsklick.</span><span lang="en">On Windows 11 it's in the classic menu: "Show more options", or <kbd>Shift</kbd> + right-click.</span></p>
+        <summary><span lang="en">Why does my first video conversion download something?</span><span lang="de">Warum wird beim ersten Video etwas heruntergeladen?</span></summary>
+        <p><span lang="en">Converta uses FFmpeg for audio and video. To keep the installer small, it's downloaded once the first time you need it (about 110 MB, checksum verified).</span><span lang="de">Für Audio und Video nutzt Converta FFmpeg. Damit der Installer klein bleibt, wird es beim ersten Bedarf einmalig geladen (ca. 110 MB, Prüfsumme wird kontrolliert).</span></p>
       </details>
       <details>
-        <summary><span lang="de">Wie deinstalliere ich Converta?</span><span lang="en">How do I uninstall Converta?</span></summary>
-        <p><span lang="de">Über Einstellungen → Apps → Installierte Apps → Converta. Das Menü wird dabei sauber entfernt.</span><span lang="en">Settings → Apps → Installed apps → Converta. The menu entry is removed cleanly.</span></p>
+        <summary><span lang="en">How do I uninstall Converta?</span><span lang="de">Wie deinstalliere ich Converta?</span></summary>
+        <p><span lang="en">Settings → Apps → Installed apps → Converta. The menu entry is removed with it.</span><span lang="de">Einstellungen → Apps → Installierte Apps → Converta. Der Menü-Eintrag wird dabei mit entfernt.</span></p>
       </details>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="wrap">
+      <h2><span lang="en">Your next file is one right-click away.</span><span lang="de">Deine nächste Datei ist nur einen Rechtsklick entfernt.</span></h2>
+      <div class="cta">
+        <a class="btn primary download-link" href="https://github.com/Erennkrb/Converta/releases/latest">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg>
+          <span lang="en">Download for Windows</span><span lang="de">Für Windows herunterladen</span>
+        </a>
+      </div>
     </div>
   </section>
 </main>
 
 <footer>
   <div class="wrap">
-    <span>© 2026 Converta · <span lang="de">Open Source unter</span><span lang="en">Open source under</span> <a class="license-link" href="https://github.com/Erennkrb/Converta/blob/main/LICENSE">AGPL-3.0</a></span>
-    <span><a class="github-link" href="https://github.com/Erennkrb/Converta">GitHub</a> · <a class="releases-link" href="https://github.com/Erennkrb/Converta/releases"><span lang="de">Alle Versionen</span><span lang="en">All releases</span></a></span>
+    <span>© 2026 Converta · <span lang="en">Open source under</span><span lang="de">Open Source unter</span> <a href="https://github.com/Erennkrb/Converta/blob/main/LICENSE">AGPL-3.0</a></span>
+    <span><a href="https://github.com/Erennkrb/Converta">GitHub</a> · <a href="https://github.com/Erennkrb/Converta/releases"><span lang="en">All releases</span><span lang="de">Alle Versionen</span></a> · <a href="https://github.com/Erennkrb/Converta/issues"><span lang="en">Report a problem</span><span lang="de">Problem melden</span></a></span>
   </div>
 </footer>
 
@@ -387,12 +417,18 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 (function () {
   var REPO = "Erennkrb/Converta";
   var root = document.documentElement;
+  var TITLES = {
+    en: "Converta – Convert files with a right-click",
+    de: "Converta – Dateien per Rechtsklick umwandeln"
+  };
 
   function setLang(lang) {
     root.dataset.lang = lang;
     root.lang = lang;
-    document.title = lang === "de" ? "Converta – Dateien per Rechtsklick umwandeln"
-                                   : "Converta – Convert files with a right-click";
+    document.title = TITLES[lang];
+    document.querySelectorAll(".lang button").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.set === lang));
+    });
     try { localStorage.setItem("lang", lang); } catch (e) {}
   }
   var saved = null;
@@ -402,7 +438,15 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
     b.addEventListener("click", function () { setLang(b.dataset.set); });
   });
 
-  // point the download button straight at the newest installer
+  // "Why?" next to the download opens its FAQ answer
+  function openTarget() {
+    var el = location.hash && document.getElementById(location.hash.slice(1));
+    if (el && el.tagName === "DETAILS") el.open = true;
+  }
+  window.addEventListener("hashchange", openTarget);
+  openTarget();
+
+  // point the download buttons straight at the newest installer
   fetch("https://api.github.com/repos/" + REPO + "/releases/latest")
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (release) {
@@ -410,8 +454,8 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       var asset = (release.assets || []).find(function (a) { return /\.exe$/i.test(a.name); });
       if (!asset) return;
       document.querySelectorAll(".download-link").forEach(function (a) { a.href = asset.browser_download_url; });
-      var mb = Math.round(asset.size / 1048576);
-      document.querySelector(".release-info").textContent = release.tag_name + " · " + mb + " MB · ";
+      document.querySelector(".release-info").textContent =
+        release.tag_name + " · " + Math.round(asset.size / 1048576) + " MB · ";
     })
     .catch(function () {});
 })();

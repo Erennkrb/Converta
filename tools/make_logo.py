@@ -7,18 +7,7 @@ from PIL import Image, ImageDraw
 SIZE = 1024  # drawn large, scaled down for smooth edges
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets")
 
-TOP_LEFT = (56, 189, 248)     # sky blue
-BOTTOM_RIGHT = (124, 58, 237)  # violet
-
-
-def gradient(size):
-    img = Image.new("RGB", (size, size))
-    px = img.load()
-    for y in range(size):
-        for x in range(size):
-            t = (x + y) / (2 * (size - 1))
-            px[x, y] = tuple(round(a + (b - a) * t) for a, b in zip(TOP_LEFT, BOTTOM_RIGHT))
-    return img
+ACCENT = (0, 95, 184)  # Windows 11 default accent blue, #005FB8
 
 
 def arrow_arc(draw, c, r, width, start, end):
@@ -42,8 +31,8 @@ def main():
 
     logo = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     mask = Image.new("L", (SIZE, SIZE), 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, SIZE - 1, SIZE - 1), radius=230, fill=255)
-    logo.paste(gradient(SIZE), mask=mask)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, SIZE - 1, SIZE - 1), radius=200, fill=255)
+    logo.paste(Image.new("RGB", (SIZE, SIZE), ACCENT), mask=mask)
 
     draw = ImageDraw.Draw(logo)
     c, r, width = SIZE // 2, 300, 96
