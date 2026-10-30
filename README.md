@@ -67,7 +67,6 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 | `converta/ui.py` | progress window and frame picker |
 | `converta/shell.py` | Explorer context-menu registration |
 | `installer/converta.iss` | Inno Setup wizard |
-| `website/` | converta.erenk.de (Cloudflare) |
 
 ## License
 
