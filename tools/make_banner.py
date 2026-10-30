@@ -1,12 +1,18 @@
-"""Generate assets/banner.svg: the logo with its arrows turning, next to the name, 3:1."""
+"""Generate assets/banner-dark.svg and banner-light.svg: the logo with its arrows turning, 3:1."""
 import math
 import os
 
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "banner.svg")
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets")
 
 ACCENT = "#005FB8"  # same blue as tools/make_logo.py
 C, RADIUS, WIDTH = 512, 300, 96  # logo geometry in its 1024 unit space
 TURN_SECONDS = 2.4  # the arrows look identical after half a turn, so this loops seamlessly
+
+# theme -> (GitHub's page background, title, tagline)
+THEMES = {
+    "dark": ("#0d1117", "#f0f6fc", "#9198a1"),
+    "light": ("#ffffff", "#1f2328", "#59636e"),
+}
 
 
 def arrow(start, end):
@@ -28,8 +34,9 @@ def arrow(start, end):
             f'stroke="#fff" stroke-width="{WIDTH}"/><polygon points="{head}" fill="#fff"/>')
 
 
-svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400" role="img" aria-label="Converta">
-  <rect width="1200" height="400" fill="#121212"/>
+for theme, (background, title, tagline) in THEMES.items():
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400" role="img" aria-label="Converta">
+  <rect width="1200" height="400" fill="{background}"/>
   <g transform="translate(110 90) scale(0.2148)">
     <rect width="1024" height="1024" rx="200" fill="{ACCENT}"/>
     <g id="arrows">
@@ -38,9 +45,9 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="
       <animateTransform attributeName="transform" type="rotate" from="0 {C} {C}" to="180 {C} {C}" dur="{TURN_SECONDS}s" repeatCount="indefinite"/>
     </g>
   </g>
-  <text x="390" y="202" fill="#f3f3f3" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif" font-size="92" font-weight="600" letter-spacing="-1.5">Converta</text>
-  <text x="393" y="262" fill="#adaaa6" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif" font-size="32">Convert any supported file with a right click.</text>
+  <text x="390" y="202" fill="{title}" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif" font-size="92" font-weight="600" letter-spacing="-1.5">Converta</text>
+  <text x="393" y="262" fill="{tagline}" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif" font-size="32">Convert any supported file with a right click.</text>
 </svg>
 '''
-with open(OUT, "w", encoding="utf-8", newline="\n") as f:
-    f.write(svg)
+    with open(os.path.join(OUT, f"banner-{theme}.svg"), "w", encoding="utf-8", newline="\n") as f:
+        f.write(svg)

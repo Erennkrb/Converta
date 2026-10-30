@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400" role="img" aria-label="Converta">
-  <rect width="1200" height="400" fill="#121212"/>
+  <rect width="1200" height="400" fill="#0d1117"/>
   <g transform="translate(110 90) scale(0.2148)">
     <rect width="1024" height="1024" rx="200" fill="#005FB8"/>
     <g id="arrows">
@@ -8,6 +8,6 @@
       <animateTransform attributeName="transform" type="rotate" from="0 512 512" to="180 512 512" dur="2.4s" repeatCount="indefinite"/>
     </g>
   </g>
-  <text x="390" y="202" fill="#f3f3f3" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif" font-size="92" font-weight="600" letter-spacing="-1.5">Converta</text>
-  <text x="393" y="262" fill="#adaaa6" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif" font-size="32">Convert any supported file with a right click.</text>
+  <text x="390" y="202" fill="#f0f6fc" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif" font-size="92" font-weight="600" letter-spacing="-1.5">Converta</text>
+  <text x="393" y="262" fill="#9198a1" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif" font-size="32">Convert any supported file with a right click.</text>
 </svg>

@@ -1,4 +1,7 @@
-![Converta](assets/banner.gif)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.gif">
+  <img alt="Converta" src="assets/banner-light.gif">
+</picture>
 
 **[converta.erenk.de](https://converta.erenk.de)** · [Download](https://github.com/Erennkrb/Converta/releases) · [Setup](#setup) · [Help](#help)
 
@@ -8,7 +11,10 @@ Or you just right click the file, choose Converta, then Convert to PNG. The PNG 
 
 That's Converta. It adds file conversion to the right click menu on Windows and Linux. It's free, it's open source, and your files never leave your computer.
 
-![Converta converting a PNG to WEBP from the right click menu](assets/demo.gif)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/demo-dark.gif">
+  <img alt="Converta converting a PNG to WEBP from the right click menu" src="assets/demo-light.gif">
+</picture>
 
 *An animation of how it works. The menu on your system will match your system's own style.*
 
