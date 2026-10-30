@@ -44,7 +44,7 @@ Downloads are on the [website](https://converta.erenk.de) and the [releases page
 
 ### Windows 10 and 11
 
-1. Download `Converta-Setup` and run it.
+1. Download Converta-Setup and run it.
 2. Windows will warn you about an unknown publisher because the installer isn't code signed yet. Click More info, then Run anyway.
 3. Click through the setup. The right click menu is set up for you.
 4. Right click a file and choose Converta. On Windows 11, hold Shift while you right click, or choose Show more options first.
@@ -71,21 +71,21 @@ Then restart your file manager, right click a file and choose Converta.
 
 ### What else you might need
 
-**Audio and video** use FFmpeg. On Windows it downloads once, the first time you need it. On Linux, install the `ffmpeg` package.
+**Audio and video** use FFmpeg. On Windows it downloads once, the first time you need it. On Linux, install the ffmpeg package.
 
 **Word, Excel and PowerPoint** need LibreOffice, or Microsoft Office on Windows. PDF to Word works without either.
 
-**GNOME Files** needs `nautilus-python` for the Converta submenu (on Debian and Ubuntu it's called `python3-nautilus`).
+**GNOME Files** needs nautilus-python for the Converta submenu (on Debian and Ubuntu it's called python3-nautilus).
 
 ## Help
 
-**I can't find Converta in the menu.** On Windows 11, hold Shift while you right click. On Linux, restart your file manager. On GNOME without `nautilus-python`, Converta is under Scripts. In any other file manager, use Open with. Converta only appears on file types it supports.
+**I can't find Converta in the menu.** On Windows 11, hold Shift while you right click. On Linux, restart your file manager. On GNOME without nautilus-python, Converta is under Scripts. In any other file manager, use Open with. Converta only appears on file types it supports.
 
 **Windows says the installer is from an unknown publisher.** That's because it isn't code signed yet. Click More info, then Run anyway. The full source code is in this repository if you'd like to check it first.
 
-**Audio or video conversion fails on Linux.** Install the `ffmpeg` package. On Fedora, the default `ffmpeg-free` package leaves out some codecs, so converting to MP4 or MOV may need the full FFmpeg.
+**Audio or video conversion fails on Linux.** Install the ffmpeg package. On Fedora, the default ffmpeg-free package leaves out some codecs, so converting to MP4 or MOV may need the full FFmpeg.
 
-**How do I uninstall it?** On Windows, go to Settings, Apps, Installed apps, Converta. On Linux, run `converta --uninstall` first, or start the AppImage with `--uninstall`, then remove the package or file.
+**How do I uninstall it?** On Windows, go to Settings, Apps, Installed apps, Converta. On Linux, run converta --uninstall first, or start the AppImage with --uninstall, then remove the package or file.
 
 **Something else is broken, or a format is missing?** [Open an issue](https://github.com/Erennkrb/Converta/issues). Please say what you tried, which file type it was and which system you're on.
 
