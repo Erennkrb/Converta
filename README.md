@@ -43,9 +43,16 @@ Just right-click any file, hover over **Converta**, and pick your format. The ne
 
 ## What you'll need
 
-- Windows 10 or 11 (64-bit)
+- Windows 10 or 11 (64-bit), or Linux (see below)
 - **Audio & video conversions:** [FFmpeg](https://ffmpeg.org). Don't sweat installing it manually—Converta will grab a clean, verified build automatically the first time you need it.
 - **Office documents:** Either Microsoft Office or the free [LibreOffice](https://www.libreoffice.org/download/) installed on your system.
+
+## Linux
+
+Grab the AppImage, `.deb`, `.rpm` or `.tar.gz` from the [latest release](https://github.com/Erennkrb/Converta/releases/latest). The AppImage sets itself up when you double-click it.
+
+- GNOME Files needs the `nautilus-python` package for the Converta submenu (Debian/Ubuntu: `python3-nautilus`).
+- Audio and video need `ffmpeg`; Office files need `libreoffice`.
 
 ## Building from source
 
