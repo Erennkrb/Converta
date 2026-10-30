@@ -3,12 +3,11 @@ import glob
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
-import winreg
 
-from .paths import data_dir, output_path
-
-CREATE_NO_WINDOW = 0x08000000
+from .i18n import tr
+from .paths import data_dir, output_path, tool_kwargs
 
 # Word's SaveAs2 FileFormat values
 WORD_FORMATS = {"pdf": 17, "docx": 16, "rtf": 6, "txt": 7, "odt": 23}
@@ -79,6 +78,10 @@ def pdf_to_images(src, target, progress=None):
 # --- Office formats ------------------------------------------------------------
 
 def word_installed():
+    if sys.platform != "win32":
+        return False
+    import winreg
+
     try:
         winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, r"Word.Application\CLSID").Close()
         return True
@@ -87,6 +90,9 @@ def word_installed():
 
 
 def find_libreoffice():
+    if sys.platform != "win32":
+        return (shutil.which("soffice") or shutil.which("libreoffice")
+                or shutil.which("/snap/bin/libreoffice"))
     found = shutil.which("soffice.com") or shutil.which("soffice.exe")
     if found:
         return found
@@ -106,8 +112,13 @@ def office_convert(src, target, progress=None):
     soffice = find_libreoffice()
     if soffice:
         return _convert_with_libreoffice(soffice, src, target)
-    raise ToolMissing("Dafür wird Microsoft Office oder LibreOffice benötigt "
-                      "(kostenlos: libreoffice.org).")
+    if sys.platform == "win32":
+        raise ToolMissing(tr("This needs Microsoft Office or LibreOffice (free: libreoffice.org).",
+                             "Dafür wird Microsoft Office oder LibreOffice benötigt "
+                             "(kostenlos: libreoffice.org)."))
+    raise ToolMissing(tr("This needs LibreOffice. Please install the \"libreoffice\" package.",
+                         "Dafür wird LibreOffice benötigt. Bitte installiere das Paket "
+                         "\"libreoffice\"."))
 
 
 def _convert_with_word(src, target):
@@ -135,15 +146,16 @@ def _convert_with_word(src, target):
 def _convert_with_libreoffice(soffice, src, target):
     dst = output_path(src, target)
     # own profile, so a LibreOffice window the user has open doesn't block us
-    profile = "file:///" + os.path.join(data_dir(), "lo-profile").replace("\\", "/")
+    profile = "file:///" + os.path.join(data_dir(), "lo-profile").replace("\\", "/").lstrip("/")
     with tempfile.TemporaryDirectory() as outdir:
         result = subprocess.run(
             [soffice, f"-env:UserInstallation={profile}", "--headless", "--norestore",
              "--convert-to", LIBREOFFICE_FILTERS.get(target, target), "--outdir", outdir, src],
-            capture_output=True, creationflags=CREATE_NO_WINDOW, timeout=600)
+            capture_output=True, timeout=600, **tool_kwargs())
         produced = glob.glob(os.path.join(outdir, "*"))
         if not produced:
             detail = result.stderr.decode("utf-8", "replace").strip()
-            raise RuntimeError(detail or "LibreOffice konnte die Datei nicht umwandeln.")
+            raise RuntimeError(detail or tr("LibreOffice could not convert the file.",
+                                            "LibreOffice konnte die Datei nicht umwandeln."))
         shutil.move(produced[0], dst)
     return dst

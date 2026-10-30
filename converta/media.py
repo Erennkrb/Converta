@@ -6,15 +6,17 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import urllib.request
 import zipfile
 
 from PIL import Image
 
-from .paths import app_dir, data_dir, output_path
+from .i18n import tr
+from .paths import app_dir, data_dir, output_path, tool_kwargs
 
-CREATE_NO_WINDOW = 0x08000000
+FFMPEG_EXE = "ffmpeg.exe" if sys.platform == "win32" else "ffmpeg"
 
 _EVEN = ["-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"]  # x264 needs even dimensions
 _H264 = ["-c:v", "libx264", "-crf", "20", "-preset", "medium", "-pix_fmt", "yuv420p",
@@ -56,31 +58,44 @@ class ToolMissing(Exception):
 
 
 def downloaded_ffmpeg():
-    return os.path.join(data_dir(), "bin", "ffmpeg.exe")
+    return os.path.join(data_dir(), "bin", FFMPEG_EXE)
+
+
+def can_download_ffmpeg():
+    return sys.platform == "win32"  # on Linux it comes from the distro's packages
 
 
 def find_ffmpeg():
     """Bundled copy, then our download, then PATH, then a winget install. None if absent."""
-    for path in (os.path.join(app_dir(), "bin", "ffmpeg.exe"), downloaded_ffmpeg()):
+    for path in (os.path.join(app_dir(), "bin", FFMPEG_EXE), downloaded_ffmpeg()):
         if os.path.exists(path):
             return path
-    found = shutil.which("ffmpeg.exe")
-    if found:
+    found = shutil.which(FFMPEG_EXE)
+    if found or sys.platform != "win32":
         return found
     # Explorer keeps its old PATH until the next sign-in, so look for winget's copy
     winget = os.path.join(os.environ.get("LOCALAPPDATA", ""), "Microsoft", "WinGet")
-    for pattern in (os.path.join(winget, "Links", "ffmpeg.exe"),
-                    os.path.join(winget, "Packages", "Gyan.FFmpeg*", "*", "bin", "ffmpeg.exe")):
+    for pattern in (os.path.join(winget, "Links", FFMPEG_EXE),
+                    os.path.join(winget, "Packages", "Gyan.FFmpeg*", "*", "bin", FFMPEG_EXE)):
         hits = glob.glob(pattern)
         if hits:
             return hits[0]
     return None
 
 
+def missing_ffmpeg_text():
+    return tr("Audio and video need FFmpeg. Please install the \"ffmpeg\" package with your "
+              "package manager, for example:\n\n"
+              "sudo apt install ffmpeg\nsudo dnf install ffmpeg-free\nsudo pacman -S ffmpeg",
+              "Für Audio und Video wird FFmpeg benötigt. Bitte installiere das Paket \"ffmpeg\" "
+              "mit deinem Paketmanager, zum Beispiel:\n\n"
+              "sudo apt install ffmpeg\nsudo dnf install ffmpeg-free\nsudo pacman -S ffmpeg")
+
+
 def ffmpeg():
     path = find_ffmpeg()
     if not path:
-        raise ToolMissing("FFmpeg fehlt.")
+        raise ToolMissing(missing_ffmpeg_text())
     return path
 
 
@@ -100,9 +115,11 @@ def download_ffmpeg(progress=None):
                 digest.update(chunk)
                 done += len(chunk)
                 if progress and total:
-                    progress(done / total, "FFmpeg wird einmalig heruntergeladen…")
+                    progress(done / total, tr("Downloading FFmpeg (only once)…",
+                                              "FFmpeg wird einmalig heruntergeladen…"))
         if digest.hexdigest() != FFMPEG_SHA256:
-            raise RuntimeError("Download beschädigt (Prüfsumme stimmt nicht).")
+            raise RuntimeError(tr("The download is damaged (checksum mismatch).",
+                                  "Download beschädigt (Prüfsumme stimmt nicht)."))
         with zipfile.ZipFile(archive) as zf:
             member = next(n for n in zf.namelist() if n.endswith("/bin/ffmpeg.exe"))
             with zf.open(member) as src, open(target + ".part", "wb") as dst:
@@ -116,7 +133,7 @@ def download_ffmpeg(progress=None):
 
 
 def _run(cmd, **kwargs):
-    return subprocess.run(cmd, capture_output=True, creationflags=CREATE_NO_WINDOW, **kwargs)
+    return subprocess.run(cmd, capture_output=True, **tool_kwargs(), **kwargs)
 
 
 def duration(src):
@@ -135,7 +152,8 @@ def grab_frame(src, seconds):
                    "-ss", f"{seconds:.3f}", "-i", src, "-frames:v", "1",
                    "-f", "image2pipe", "-c:v", "png", "-"])
     if not result.stdout:
-        raise RuntimeError(result.stderr.decode("utf-8", "replace").strip() or "Kein Bild")
+        raise RuntimeError(result.stderr.decode("utf-8", "replace").strip()
+                           or tr("No picture found", "Kein Bild gefunden"))
     return Image.open(io.BytesIO(result.stdout)).convert("RGB")
 
 
@@ -151,7 +169,7 @@ def convert(src, target, progress=None):
            *args, "-map_metadata", "0", "-progress", "pipe:1", "-nostats", dst]
     with tempfile.TemporaryFile() as errors:
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=errors,
-                                creationflags=CREATE_NO_WINDOW, text=True,
+                                **tool_kwargs(), text=True,
                                 encoding="utf-8", errors="replace")
         try:
             for line in proc.stdout:
@@ -172,5 +190,5 @@ def convert(src, target, progress=None):
                 os.remove(dst)
             errors.seek(0)
             detail = errors.read().decode("utf-8", "replace").strip().splitlines()
-            raise RuntimeError(detail[-1] if detail else f"ffmpeg Fehler {proc.returncode}")
+            raise RuntimeError(detail[-1] if detail else f"ffmpeg: {proc.returncode}")
     return dst

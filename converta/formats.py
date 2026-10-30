@@ -1,6 +1,8 @@
 """Which file types Converta knows and what each one can be turned into."""
 import os
 
+from .i18n import tr
+
 SEP = None  # separator line in the context menu
 
 LABELS = {
@@ -93,9 +95,9 @@ def all_source_exts():
 def menu_label(group, target):
     label = LABELS[target]
     if group == "pdf" and target in ("png", "jpg"):
-        return f"Seiten als {label}"
+        return tr(f"Pages as {label}", f"Seiten als {label}")
     if group == "video" and target in ("png", "jpg"):
-        return f"Einzelbild als {label}…"
+        return tr(f"Still image as {label}…", f"Einzelbild als {label}…")
     if group == "video" and target in AUDIO_TARGETS:
-        return f"Audio als {label}"
-    return f"In {label} umwandeln"
+        return tr(f"Audio as {label}", f"Audio als {label}")
+    return tr(f"Convert to {label}", f"In {label} umwandeln")

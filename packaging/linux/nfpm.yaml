@@ -1,0 +1,36 @@
+name: converta
+arch: ${NFPM_ARCH}
+platform: linux
+version: ${VERSION}
+section: utils
+priority: optional
+maintainer: Erennkrb <141073589+Erennkrb@users.noreply.github.com>
+description: Convert images, audio, video, PDF, Office, 3D and CAD files from the right-click menu
+homepage: https://converta.erenk.de
+license: AGPL-3.0
+contents:
+  - src: build/linux/app/converta
+    dst: /opt/converta
+    type: tree
+  - src: /opt/converta/converta
+    dst: /usr/bin/converta
+    type: symlink
+  - src: packaging/linux/converta-setup.desktop
+    dst: /etc/xdg/autostart/converta-setup.desktop
+  - src: assets/converta.png
+    dst: /usr/share/icons/hicolor/512x512/apps/converta.png
+scripts:
+  postinstall: packaging/linux/postinstall.sh
+overrides:
+  deb:
+    recommends:
+      - ffmpeg
+    suggests:
+      - libreoffice
+      - python3-nautilus
+  rpm:
+    recommends:
+      - ffmpeg-free
+    suggests:
+      - libreoffice
+      - nautilus-python

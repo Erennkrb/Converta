@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Converta setup
+Comment=Keeps the Converta right-click menu up to date for this user
+Exec=/usr/bin/converta --install --quiet
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

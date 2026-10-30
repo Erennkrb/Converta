@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Converta
+Comment=Convert files with a right-click
+Exec=converta %F
+Icon=converta
+Terminal=false
+Categories=Utility;

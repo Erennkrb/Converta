@@ -21,9 +21,27 @@ def asset(name):
 
 
 def data_dir():
-    path = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "Converta")
+    if sys.platform == "win32":
+        path = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "Converta")
+    else:
+        base = os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")
+        path = os.path.join(base, "converta")
     os.makedirs(path, exist_ok=True)
     return path
+
+
+def tool_kwargs():
+    """subprocess arguments for external tools (ffmpeg, LibreOffice)."""
+    if sys.platform == "win32":
+        return {"creationflags": 0x08000000}  # CREATE_NO_WINDOW
+    # PyInstaller points the library path at its own bundle, which breaks system tools
+    env = dict(os.environ)
+    original = env.pop("LD_LIBRARY_PATH_ORIG", None)
+    if original is not None:
+        env["LD_LIBRARY_PATH"] = original
+    elif frozen():
+        env.pop("LD_LIBRARY_PATH", None)
+    return {"env": env}
 
 
 def unique_path(path):

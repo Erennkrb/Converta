@@ -2,6 +2,7 @@
 import io
 import os
 
+from .i18n import tr
 from .paths import output_path
 
 CAD_TYPES = {".step": "step", ".stp": "step", ".iges": "iges", ".igs": "iges"}
@@ -39,7 +40,8 @@ def _single_mesh(scene):
 def convert(src, target, progress=None):
     scene = _load(src)
     if not scene.geometry:
-        raise RuntimeError("Die Datei enthält kein 3D-Modell.")
+        raise RuntimeError(tr("This file doesn't contain a 3D model.",
+                              "Die Datei enthält kein 3D-Modell."))
     dst = output_path(src, target)
     if target in ("glb", "3mf", "obj"):
         # these keep separate parts and colours

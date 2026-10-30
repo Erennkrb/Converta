@@ -6,10 +6,14 @@ import sys
 
 from . import APP_NAME, documents, images, media, models, shell, ui
 from .formats import LABELS, SINGLE_FRAME_IMAGES, VIDEO_KEYS, group_of
+from .i18n import tr
+from .paths import frozen
 
 # Explorer starts one process per selected file; they meet on this port so
 # the first one handles the whole selection one after another.
 IPC_PORT = 47653
+if hasattr(os, "getuid"):
+    IPC_PORT += os.getuid() % 10000  # other users on this machine must not get our file list
 COLLECT_SECONDS = 0.6
 
 # groups whose conversions take long enough to deserve a progress window
@@ -69,7 +73,7 @@ def converter_for(path, target):
         return models.convert
     if group == "dxf":
         return models.dxf_convert
-    raise ValueError("Dateityp wird nicht unterstützt")
+    raise ValueError("Unsupported file type")
 
 
 def needs_ffmpeg(path, target):
@@ -77,13 +81,16 @@ def needs_ffmpeg(path, target):
 
 
 def ensure_ffmpeg():
-    """Download ffmpeg on first use. Returns an error text, or None when it's ready."""
+    """Get ffmpeg on first use. Returns an error text, or None when it's ready."""
     if media.find_ffmpeg():
         return None
+    if not media.can_download_ffmpeg():
+        return media.missing_ffmpeg_text()
     errors = ui.run_jobs([("FFmpeg", media.download_ffmpeg)], show_window=True)
     if media.find_ffmpeg():
         return None
-    return ("FFmpeg konnte nicht heruntergeladen werden. Bitte Internetverbindung prüfen.\n\n"
+    return (tr("Couldn't download FFmpeg. Please check your internet connection.\n\n",
+               "FFmpeg konnte nicht heruntergeladen werden. Bitte Internetverbindung prüfen.\n\n")
             + "\n".join(errors)).strip()
 
 
@@ -115,6 +122,25 @@ def convert_files(files, target):
     return ui.run_jobs(jobs, show_window=slow)
 
 
+def install_message(names):
+    if sys.platform == "win32":
+        return tr("Context menu installed.", "Kontextmenü installiert.")
+    where = ", ".join(names) if names else tr("no supported file manager found",
+                                              "kein unterstützter Dateimanager gefunden")
+    return tr(f"Converta is set up: {where}.\n\nRight-click a file to use it. In other file "
+              "managers use \"Open with\". You may need to restart your file manager.",
+              f"Converta ist eingerichtet: {where}.\n\nRechtsklicke eine Datei, um es zu nutzen. "
+              "In anderen Dateimanagern geht es über \"Öffnen mit\". Eventuell musst du den "
+              "Dateimanager neu starten.")
+
+
+def report(errors):
+    if errors:
+        ui.message(tr("Conversion failed:\n\n", "Umwandlung fehlgeschlagen:\n\n")
+                   + "\n".join(errors), error=True)
+        sys.exit(1)
+
+
 def main():
     parser = argparse.ArgumentParser(prog=APP_NAME)
     parser.add_argument("--install", action="store_true", help="register the context menu")
@@ -129,23 +155,35 @@ def main():
         if args.quiet:
             forwarded.append("--quiet")
         if not shell.relaunch_as_admin(forwarded):
-            ui.message("Dafür werden Administratorrechte benötigt.", error=True)
+            ui.message(tr("This needs administrator rights.",
+                          "Dafür werden Administratorrechte benötigt."), error=True)
             sys.exit(1)
     elif args.install:
-        shell.install()
+        names = shell.install()
         if not args.quiet:
-            ui.message("Kontextmenü installiert.")
+            ui.message(install_message(names))
     elif args.uninstall:
         shell.uninstall()
         if not args.quiet:
-            ui.message("Kontextmenü entfernt.")
+            ui.message(tr("Context menu removed.", "Kontextmenü entfernt."))
     elif args.to and args.files:
         files = collect_files([os.path.abspath(f) for f in args.files])
         if files is None:
             return
-        errors = convert_files(files, args.to)
-        if errors:
-            ui.message("Umwandlung fehlgeschlagen:\n\n" + "\n".join(errors), error=True)
-            sys.exit(1)
+        report(convert_files(files, args.to))
+    elif args.files and not ui.has_display():
+        parser.error(tr("no display available, choose a format with --to",
+                        "kein Bildschirm verfügbar, wähle ein Format mit --to"))
+    elif args.files:
+        # "Open with" and the scripts menu: ask for the format first
+        files = collect_files([os.path.abspath(f) for f in args.files])
+        if files is None:
+            return
+        target = ui.pick_target(files)
+        if target:
+            report(convert_files(files, target))
+    elif frozen() and sys.platform != "win32":
+        # double-clicking the AppImage sets everything up
+        ui.message(install_message(shell.install()))
     else:
         parser.print_help()

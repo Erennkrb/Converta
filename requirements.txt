@@ -2,7 +2,7 @@ pillow
 pymupdf
 pdf2docx
 python-docx
-pywin32
+pywin32; sys_platform == "win32"
 trimesh
 networkx
 cascadio

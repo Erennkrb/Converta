@@ -1,0 +1,91 @@
+name: Linux
+
+on:
+  push:
+    branches: [main, linux-support]
+    tags: ["v*"]
+    paths-ignore: ["website/**", "**.md"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      # Debian 11 has an old glibc, so the result also runs on older distros
+      - name: Build
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src python:3.13-bullseye sh -c \
+            "sh packaging/linux/build.sh && python packaging/linux/make_fixtures.py dist/fixtures && chown -R $(id -u):$(id -g) dist build"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}
+          path: |
+            dist/linux/*
+            dist/fixtures/*
+
+  distros:
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - ubuntu:20.04
+          - ubuntu:24.04
+          - ubuntu:25.04
+          - debian:11
+          - debian:13
+          - linuxmintd/mint22-amd64
+          - kalilinux/kali-rolling
+          - fedora:latest
+          - rockylinux:9
+          - almalinux:9
+          - archlinux:latest
+          - manjarolinux/base:latest
+          - opensuse/leap:15.6
+          - opensuse/tumbleweed:latest
+          - voidlinux/voidlinux:latest
+          - gentoo/stage3:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-x86_64
+          path: dist
+      - name: Smoke test on ${{ matrix.image }}
+        run: |
+          docker run --rm -v "$PWD:/w:ro" "${{ matrix.image }}" sh -c '
+            command -v tar >/dev/null && command -v gzip >/dev/null || {
+              command -v dnf >/dev/null && dnf install -y -q tar gzip
+              command -v zypper >/dev/null && zypper --non-interactive install -y tar gzip
+              command -v pacman >/dev/null && pacman -Sy --noconfirm tar gzip
+            }
+            sh /w/packaging/linux/smoke_test.sh /w/dist/linux/converta-*-linux-x86_64.tar.gz /w/dist/fixtures'
+
+  desktop:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-x86_64
+          path: dist
+      - name: Install test tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb ffmpeg libreoffice-writer python3-gi python3-nautilus gir1.2-nautilus-4.0
+      - name: Test windows, FFmpeg, LibreOffice, packages, Nautilus
+        run: |
+          sh packaging/linux/desktop_test.sh \
+            "$PWD"/dist/linux/converta-*-linux-x86_64.tar.gz \
+            "$PWD"/dist/linux/Converta-*-x86_64.AppImage \
+            "$PWD"/dist/linux/converta_*_amd64.deb \
+            "$PWD/dist/fixtures"

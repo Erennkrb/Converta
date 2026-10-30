@@ -1,36 +1,77 @@
-"""Small Tk windows: progress for slow conversions and the frame picker."""
-import ctypes
+"""Small Tk windows: progress for slow conversions, frame and format pickers."""
 import os
+import sys
 import threading
 
 from PIL import Image
 
 from . import APP_NAME
+from .formats import LABELS, group_of, menu_label, targets_for, SEP
+from .i18n import tr
 from .paths import asset
 
 PREVIEW_MAX = (640, 400)
 
 
+def has_display():
+    """False on a plain terminal or server, where Tk can't open any window."""
+    if sys.platform == "win32":
+        return True
+    return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+
+
 def message(text, error=False):
-    flags = 0x10 if error else 0x40  # MB_ICONERROR / MB_ICONINFORMATION
-    ctypes.windll.user32.MessageBoxW(None, text, APP_NAME, flags | 0x10000)  # MB_SETFOREGROUND
+    if sys.platform == "win32":
+        import ctypes
+
+        flags = 0x10 if error else 0x40  # MB_ICONERROR / MB_ICONINFORMATION
+        ctypes.windll.user32.MessageBoxW(None, text, APP_NAME, flags | 0x10000)  # MB_SETFOREGROUND
+        return
+    if has_display():
+        try:
+            from tkinter import messagebox
+
+            root = _new_root(APP_NAME)
+            root.withdraw()
+            (messagebox.showerror if error else messagebox.showinfo)(APP_NAME, text, parent=root)
+            root.destroy()
+            return
+        except Exception:
+            pass
+    print(text, file=sys.stderr if error else sys.stdout)
 
 
 def _new_root(title):
     import tkinter as tk
+    from tkinter import ttk
 
-    try:
-        ctypes.windll.shcore.SetProcessDpiAwareness(1)
-    except Exception:
-        pass
+    if sys.platform == "win32":
+        import ctypes
+
+        try:
+            ctypes.windll.shcore.SetProcessDpiAwareness(1)
+        except Exception:
+            pass
     root = tk.Tk()
     root.title(title)
     root.resizable(False, False)
     try:
-        root.iconbitmap(asset("converta.ico"))
+        if sys.platform == "win32":
+            root.iconbitmap(asset("converta.ico"))
+        else:
+            root.iconphoto(True, tk.PhotoImage(file=asset("converta.png")))
+            ttk.Style(root).theme_use("clam")  # Tk's default Linux theme looks dated
     except Exception:
         pass
     return root
+
+
+def _bold(root):
+    from tkinter import font
+
+    bold = font.nametofont("TkDefaultFont", root=root).copy()
+    bold.configure(weight="bold", size=abs(bold.cget("size")) + 1)
+    return bold
 
 
 def _center(root):
@@ -38,8 +79,11 @@ def _center(root):
     w, h = root.winfo_width(), root.winfo_height()
     root.geometry(f"+{(root.winfo_screenwidth() - w) // 2}+{(root.winfo_screenheight() - h) // 3}")
     root.lift()
-    root.attributes("-topmost", True)
-    root.after(300, lambda: root.attributes("-topmost", False))
+    try:
+        root.attributes("-topmost", True)
+        root.after(300, lambda: root.attributes("-topmost", False))
+    except Exception:
+        pass  # not every Linux window manager supports it
     root.focus_force()
 
 
@@ -61,7 +105,7 @@ def run_jobs(jobs, show_window):
         except Exception as e:
             errors.append(f"{os.path.basename(path)}: {e}")
 
-    if not show_window:
+    if not show_window or not has_display():
         for path, fn in jobs:
             run_one(path, fn, lambda fraction, text=None: None)
         return errors
@@ -71,7 +115,7 @@ def run_jobs(jobs, show_window):
     root = _new_root(APP_NAME)
     frame = ttk.Frame(root, padding=16)
     frame.pack()
-    title = ttk.Label(frame, font=("Segoe UI", 10, "bold"), width=48)
+    title = ttk.Label(frame, font=_bold(root), width=48)
     title.pack(anchor="w")
     name = ttk.Label(frame, foreground="gray", width=48)
     name.pack(anchor="w", pady=(2, 10))
@@ -82,9 +126,9 @@ def run_jobs(jobs, show_window):
     def cancel():
         state["cancel"] = True
         cancel_button.state(["disabled"])
-        title.configure(text="Wird abgebrochen…")
+        title.configure(text=tr("Cancelling…", "Wird abgebrochen…"))
 
-    cancel_button = ttk.Button(frame, text="Abbrechen", command=cancel)
+    cancel_button = ttk.Button(frame, text=tr("Cancel", "Abbrechen"), command=cancel)
     cancel_button.pack(anchor="e", pady=(12, 0))
     root.protocol("WM_DELETE_WINDOW", cancel)
 
@@ -115,8 +159,9 @@ def run_jobs(jobs, show_window):
             if state["text"]:
                 title.configure(text=state["text"])
             else:
-                title.configure(text="Wird umgewandelt…" if len(jobs) == 1
-                                else f"Datei {i + 1} von {len(jobs)} wird umgewandelt…")
+                title.configure(text=tr("Converting…", "Wird umgewandelt…") if len(jobs) == 1
+                                else tr(f"Converting file {i + 1} of {len(jobs)}…",
+                                        f"Datei {i + 1} von {len(jobs)} wird umgewandelt…"))
             name.configure(text=os.path.basename(jobs[i][0]))
         if state["fraction"] is None:
             if str(bar["mode"]) != "indeterminate":
@@ -155,7 +200,7 @@ class AnimationFrames:
         return self.img.convert("RGBA")
 
     def describe(self, i):
-        return f"Frame {i + 1} von {self.count}"
+        return tr(f"Frame {i + 1} of {self.count}", f"Frame {i + 1} von {self.count}")
 
 
 class VideoFrames:
@@ -205,11 +250,12 @@ def pick_frame(path, target_label):
 
     source = VideoFrames(path) if not _is_image(path) else AnimationFrames(path)
 
-    root = _new_root(f"{APP_NAME} – Bild auswählen")
+    root = _new_root(f"{APP_NAME} – " + tr("Pick a frame", "Bild auswählen"))
     frame = ttk.Frame(root, padding=16)
     frame.pack()
-    ttk.Label(frame, text=os.path.basename(path), font=("Segoe UI", 10, "bold")).pack(anchor="w")
-    ttk.Label(frame, text=f"Wähle das Bild, das als {target_label} gespeichert wird.",
+    ttk.Label(frame, text=os.path.basename(path), font=_bold(root)).pack(anchor="w")
+    ttk.Label(frame, text=tr(f"Choose the picture to save as {target_label}.",
+                             f"Wähle das Bild, das als {target_label} gespeichert wird."),
               foreground="gray").pack(anchor="w", pady=(2, 10))
 
     canvas = tk.Label(frame, background="#202020", width=PREVIEW_MAX[0], height=PREVIEW_MAX[1])
@@ -229,7 +275,7 @@ def pick_frame(path, target_label):
         try:
             img = source.frame(i)
         except Exception as e:
-            caption.configure(text=f"Fehler: {e}")
+            caption.configure(text=tr(f"Error: {e}", f"Fehler: {e}"))
             return
         state["photo"] = ImageTk.PhotoImage(_preview(img))
         canvas.configure(image=state["photo"], width=PREVIEW_MAX[0], height=PREVIEW_MAX[1])
@@ -261,15 +307,16 @@ def pick_frame(path, target_label):
         try:
             state["result"] = source.frame(position.get())
         except Exception as e:
-            message(f"Bild konnte nicht gelesen werden:\n\n{e}", error=True)
+            message(tr(f"Couldn't read the picture:\n\n{e}",
+                       f"Bild konnte nicht gelesen werden:\n\n{e}"), error=True)
             return
         root.destroy()
 
     buttons = ttk.Frame(frame)
     buttons.pack(fill="x", pady=(14, 0))
-    ttk.Button(buttons, text="Abbrechen", command=root.destroy).pack(side="right")
-    ttk.Button(buttons, text=f"Als {target_label} speichern", command=save).pack(
-        side="right", padx=(0, 8))
+    ttk.Button(buttons, text=tr("Cancel", "Abbrechen"), command=root.destroy).pack(side="right")
+    ttk.Button(buttons, text=tr(f"Save as {target_label}", f"Als {target_label} speichern"),
+               command=save).pack(side="right", padx=(0, 8))
 
     root.bind("<Left>", lambda e: step(-1))
     root.bind("<Right>", lambda e: step(1))
@@ -283,6 +330,48 @@ def pick_frame(path, target_label):
 
 
 def _is_image(path):
-    from .formats import group_of
-
     return group_of(path) == "image"
+
+
+# --- format picker ---------------------------------------------------------------
+
+def shared_targets(files):
+    """Targets every selected file can be converted to, in menu order."""
+    lists = [[t for t in targets_for(os.path.splitext(f)[1].lower()) if t is not SEP]
+             for f in files]
+    return [t for t in lists[0] if all(t in other for other in lists)]
+
+
+def pick_target(files):
+    """Format window for "Open with" and the scripts menu. Returns a target, or None."""
+    from tkinter import ttk
+
+    targets = shared_targets(files)
+    if not targets:
+        return None
+    root = _new_root(APP_NAME)
+    frame = ttk.Frame(root, padding=16)
+    frame.pack()
+    header = os.path.basename(files[0]) if len(files) == 1 else tr(f"{len(files)} files",
+                                                                   f"{len(files)} Dateien")
+    ttk.Label(frame, text=header, font=_bold(root)).grid(row=0, column=0, columnspan=4, sticky="w")
+    ttk.Label(frame, text=tr("Convert to:", "Umwandeln in:"), foreground="gray").grid(
+        row=1, column=0, columnspan=4, sticky="w", pady=(2, 10))
+    chosen = {}
+
+    def choose(target):
+        chosen["target"] = target
+        root.destroy()
+
+    group = group_of(files[0])
+    for i, target in enumerate(targets):
+        # a still image from a video is different from converting it: keep that visible
+        text = LABELS[target]
+        if group == "video" and target in ("png", "jpg"):
+            text = menu_label(group, target)
+        ttk.Button(frame, text=text, command=lambda t=target: choose(t)).grid(
+            row=2 + i // 4, column=i % 4, padx=3, pady=3, sticky="ew")
+    root.bind("<Escape>", lambda e: root.destroy())
+    _center(root)
+    root.mainloop()
+    return chosen.get("target")
