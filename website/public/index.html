@@ -445,7 +445,8 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   }
   var saved = null;
   try { saved = localStorage.getItem("lang"); } catch (e) {}
-  setLang(saved || ((navigator.language || "").toLowerCase().indexOf("de") === 0 ? "de" : "en"));
+  // English is the main language; German only when picked with the DE button
+  setLang(saved === "de" ? "de" : "en");
   document.querySelectorAll(".lang button").forEach(function (b) {
     b.addEventListener("click", function () { setLang(b.dataset.set); });
   });
