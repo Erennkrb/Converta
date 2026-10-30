@@ -19,7 +19,7 @@ convert() {
   echo "ok: $1 -> $3"
 }
 ffmpeg -hide_banner -loglevel error -f lavfi -i "sine=duration=1" "$WORK/files/song.wav"
-ffmpeg -hide_banner -loglevel error -f lavfi -i "testsrc=duration=1:size=160x120:rate=10" "$WORK/files/clip.mp4"
+ffmpeg -hide_banner -loglevel error -f lavfi -i "testsrc=duration=1:size=160x120:rate=10" -f lavfi -i "sine=duration=1" -shortest "$WORK/files/clip.mp4"
 
 convert song.wav mp3 song.mp3
 convert clip.mp4 webm clip.webm

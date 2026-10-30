@@ -152,6 +152,7 @@ def run_jobs(jobs, show_window):
     def poll():
         if state["done"]:
             bar.stop()
+            root.after_cancel(state["reveal"])
             root.destroy()
             return
         if not state["cancel"]:
@@ -181,9 +182,9 @@ def run_jobs(jobs, show_window):
             _center(root)
 
     root.withdraw()
+    state["reveal"] = root.after(500, reveal)
     threading.Thread(target=worker, daemon=True).start()
     poll()
-    root.after(500, reveal)
     root.mainloop()
     return errors
 
