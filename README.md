@@ -11,12 +11,9 @@ Or you just right click the file, choose Converta, then Convert to PNG. The PNG 
 
 That's Converta. It adds file conversion to the right click menu on Windows and Linux. It's free, it's open source, and your files never leave your computer.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/demo-dark.gif">
-  <img alt="Converta converting a PNG to WEBP from the right click menu" src="assets/demo-light.gif">
-</picture>
+<img alt="A pixel art desktop: holiday.webp becomes a PNG from the right click menu, then party.gif becomes a PNG after picking the frame" src="assets/demo.gif">
 
-*An animation of how it works. The menu on your system will match your system's own style.*
+*A recording of the demo on the website. The menu on your system will match your system's own style.*
 
 ## What it converts
 
